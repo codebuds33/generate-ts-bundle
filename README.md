@@ -9,7 +9,7 @@ To install the bundle, use composer:
 composer require codebuds/ts-generator-bundle
 ```
 
-##Configuration
+## Configuration
 
 This bundle provides three configurable parameters with default values:
 
