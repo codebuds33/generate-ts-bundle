@@ -1,0 +1,8 @@
+.idea
+composer.lock
+phpunit.xml
+/var/
+/dev
+vendor
+.phpunit.result.cache
+docker-compose.override.yaml

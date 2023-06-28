@@ -1,0 +1,8 @@
+services:
+    CodeBuds\GenerateTsBundle\Command\GenerateTsInterfacesCommand:
+        tags:
+            - { name: console.command }
+        arguments:
+            $namespace: '%generate_ts.namespace%'
+            $inputDirectory: '%generate_ts.input_directory%'
+            $outputDirectory: '%generate_ts.output_directory%'
