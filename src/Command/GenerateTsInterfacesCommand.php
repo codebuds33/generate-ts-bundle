@@ -4,6 +4,7 @@ namespace CodeBuds\GenerateTsBundle\Command;
 
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\JoinColumn;
+use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\OneToMany;
 use ReflectionClass;
@@ -101,6 +102,7 @@ class GenerateTsInterfacesCommand extends Command
             foreach ($properties as $property) {
                 $columnAttributes = $property->getAttributes(Column::class);
                 $manyToOneAttributes = $property->getAttributes(ManyToOne::class);
+                $manyToManyAttributes = $property->getAttributes(ManyToMany::class);
                 $oneToManyAttributes = $property->getAttributes(OneToMany::class);
                 $joinColumnAttributes = $property->getAttributes(JoinColumn::class);
 
@@ -113,9 +115,48 @@ class GenerateTsInterfacesCommand extends Command
                 $propertyType = $propertyType?->getName();
 
                 $target = null;
+
                 if ($propertyType === 'Doctrine\Common\Collections\Collection') {
-                    $reflexionAttribute = $oneToManyAttributes[0];
+                    //If it is a one to many get the target from the OneToMany Attributes, if it is a ManyToMany get it from those attributes
+                    if ($oneToManyAttributes) {
+                        $reflexionAttribute = $oneToManyAttributes[0];
+                    } elseif ($manyToManyAttributes) {
+                        $reflexionAttribute = $manyToManyAttributes[0];
+                    } else {
+                        throw new \Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
+
+                    }
                     $target = $reflexionAttribute->getArguments()['targetEntity'];
+                }
+
+                //If the property does not have a type but an attribute of Doctrine\ORM\Mapping\Column get the type from that attribute
+                if ($propertyType === null) {
+                    /** @var ?\ReflectionAttribute $mappingColumnAttribute */
+                    $mappingColumnAttributeArray = (array_filter(
+                        $property->getAttributes(),
+                        static fn($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
+                    ));
+
+                    if ($mappingColumnAttributeArray) {
+                        $mappingColumnAttribute = reset($mappingColumnAttributeArray);
+                        $mappingColumnAttributeArguments = $mappingColumnAttribute->getArguments();
+                        if (array_key_exists('type', $mappingColumnAttributeArguments)) {
+                            $propertyType = $mappingColumnAttributeArguments['type'];
+                        }
+                    }
+                }
+
+                //If the property is still not set see if it is Gedmo Blameable, if so it will be a string, if the blameable was set as an entity the target will have been set
+                if ($propertyType === null) {
+                    /** @var ?\ReflectionAttribute $mappingColumnAttribute */
+                    $blameableAttributeArray = (array_filter(
+                        $property->getAttributes(),
+                        static fn($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
+                    ));
+
+                    if ($blameableAttributeArray) {
+                        $propertyType = 'string';
+                    }
                 }
 
                 $tsType = $this->mapPhpTypeToTsType($propertyType, $target);
@@ -150,7 +191,8 @@ class GenerateTsInterfacesCommand extends Command
     private function mapPhpTypeToTsType(?string $phpType, ?string $target = null): string
     {
         if ($target) {
-            return sprintf('Array<%s>', $target);
+            $parts = explode('\\', $target);
+            return sprintf('Array<%s>', end($parts));
         }
 
         if ($phpType === null) {
@@ -168,6 +210,8 @@ class GenerateTsInterfacesCommand extends Command
             'boolean' => 'boolean',
             'DateTime' => 'Date',
             'DateTimeImmutable' => 'Date',
+            'DateTimeInterface' => 'Date',
+            'datetime' => 'Date',
         ];
 
         if (isset($mapping[$phpType])) {
@@ -176,7 +220,7 @@ class GenerateTsInterfacesCommand extends Command
 
         // Check if the PHP type is an entity and extract the class name
         if (preg_match('/^' . preg_quote($this->namespace, '/') . '(.+)$/', $phpType, $matches)) {
-            $parts = explode('\\',$matches[1]);
+            $parts = explode('\\', $matches[1]);
             return end($parts);
         }
 
