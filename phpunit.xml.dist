@@ -10,6 +10,10 @@
         <include>
             <directory suffix=".php">src</directory>
         </include>
+        <exclude>
+            <file>src/GenerateTsBundle.php</file>
+            <directory>src/Tests</directory>
+        </exclude>
     </coverage>
     <php>
         <ini name="error_reporting" value="-1"/>
