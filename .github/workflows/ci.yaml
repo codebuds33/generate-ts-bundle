@@ -32,7 +32,7 @@ jobs:
             - name: PHPUnit Tests
               uses: php-actions/phpunit@v3
               with:
-                  version: {{ matrix.php-unit-versions }}
+                  version: ${{ matrix.php-unit-versions }}
                   php_version: ${{ matrix.php-versions }}
                   php_extensions: xdebug gd
                   bootstrap: vendor/autoload.php
