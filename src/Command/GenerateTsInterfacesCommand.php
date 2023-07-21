@@ -22,22 +22,23 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class GenerateTsInterfacesCommand extends Command
 {
-    private string $namespace;
 
     public function __construct(
-        private readonly string $inputDirectory,
-        private readonly string $outputDirectory,
-        string                  $namespace
+        private string $inputDirectory,
+        private string $outputDirectory,
+        private string $namespace,
     )
     {
-        $this->namespace = str_replace('/', '//', $namespace);
         parent::__construct();
     }
 
     protected function configure(): void
     {
         $this
-            ->addOption('force', null, InputOption::VALUE_NONE, 'Create new TypeScript Interfaces');
+            ->addOption('force', null, InputOption::VALUE_NONE, 'Create new TypeScript Interfaces')
+            ->addOption('namespace', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default namespace')
+            ->addOption('outputDirectory', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default output directory')
+            ->addOption('inputDirectory', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default input directory');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -47,6 +48,24 @@ class GenerateTsInterfacesCommand extends Command
         $io->title('Generate TypeScript Interfaces');
 
         $force = $input->getOption('force');
+
+        if (null !== $outputDirectory = $input->getOption('outputDirectory')) {
+            $this->outputDirectory = $outputDirectory;
+        }
+
+        if (null !== $inputDirectory = $input->getOption('inputDirectory')) {
+            $this->inputDirectory = $inputDirectory;
+        }
+
+        if (null !== $namespace = $input->getOption('namespace')) {
+            $this->namespace = $namespace;
+        }
+
+        #If the namespace is defined with backslashes replace with forward slashes
+        $this->namespace = str_replace('\\\\', '/', $this->namespace);
+        $this->namespace = str_replace('\\', '/', $this->namespace);
+        #If the namespace is defined with double forward slashes replace by single to then reset to double
+        $this->namespace = str_replace('//', '/', $this->namespace);
 
         try {
             $this->generateTsInterfaces($io, $force);
@@ -89,6 +108,10 @@ class GenerateTsInterfacesCommand extends Command
         foreach ($files as $file) {
             $relativePath = ltrim(str_replace($this->inputDirectory, '', $file), '/');
             $className = $this->namespace . str_replace(['.php', '/'], ['', '\\'], $relativePath);
+            $className = str_replace('/', '\\', $className);
+
+            //We need to require the file to make sure the ReflectionClass will be able to create the class
+            require_once $file;
 
             $reflector = new ReflectionClass($className);
 
@@ -183,7 +206,7 @@ class GenerateTsInterfacesCommand extends Command
             }
 
             file_put_contents($typePath, $typeScriptInterface);
-            $io->info(sprintf('generated %s', $typePath));
+            $io->info(sprintf('%s generated for %s', $typePath, $className));
         }
         $io->progressFinish();
     }
@@ -194,6 +217,7 @@ class GenerateTsInterfacesCommand extends Command
             $parts = explode('\\', $target);
             return sprintf('Array<%s>', end($parts));
         }
+
 
         if ($phpType === null) {
             return 'unknown';
@@ -218,8 +242,13 @@ class GenerateTsInterfacesCommand extends Command
             return $mapping[$phpType];
         }
 
+        $quotedNamespace = preg_quote( str_replace('/', '\\', $this->namespace), '/');
+
         // Check if the PHP type is an entity and extract the class name
-        if (preg_match('/^' . preg_quote($this->namespace, '/') . '(.+)$/', $phpType, $matches)) {
+        if (preg_match(
+            '/^' .
+            $quotedNamespace .
+            '(.+)$/', $phpType, $matches)) {
             $parts = explode('\\', $matches[1]);
             return end($parts);
         }

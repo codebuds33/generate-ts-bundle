@@ -1,3 +1,5 @@
+![Code Coverage Badge](./plugin/.coverage/badge.svg)
+
 # CodeBuds TypeScript Generator Bundle
 
 The CodeBuds TypeScript Generator Bundle is a Symfony bundle designed to improve developer experience (DX) by automatically generating TypeScript (TS) files based on PHP files. This bundle scans your PHP entities and creates corresponding TypeScript interfaces, significantly reducing the amount of time required to define these interfaces manually.
