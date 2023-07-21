@@ -4,6 +4,7 @@ namespace CodeBuds\GenerateTsBundle\Command;
 
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\JoinColumn;
+use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\OneToMany;
 use ReflectionClass;
@@ -21,22 +22,23 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class GenerateTsInterfacesCommand extends Command
 {
-    private string $namespace;
 
     public function __construct(
-        private readonly string $inputDirectory,
-        private readonly string $outputDirectory,
-        string                  $namespace
+        private string $inputDirectory,
+        private string $outputDirectory,
+        private string $namespace,
     )
     {
-        $this->namespace = str_replace('/', '//', $namespace);
         parent::__construct();
     }
 
     protected function configure(): void
     {
         $this
-            ->addOption('force', null, InputOption::VALUE_NONE, 'Create new TypeScript Interfaces');
+            ->addOption('force', null, InputOption::VALUE_NONE, 'Create new TypeScript Interfaces')
+            ->addOption('namespace', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default namespace')
+            ->addOption('outputDirectory', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default output directory')
+            ->addOption('inputDirectory', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default input directory');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -46,6 +48,24 @@ class GenerateTsInterfacesCommand extends Command
         $io->title('Generate TypeScript Interfaces');
 
         $force = $input->getOption('force');
+
+        if (null !== $outputDirectory = $input->getOption('outputDirectory')) {
+            $this->outputDirectory = $outputDirectory;
+        }
+
+        if (null !== $inputDirectory = $input->getOption('inputDirectory')) {
+            $this->inputDirectory = $inputDirectory;
+        }
+
+        if (null !== $namespace = $input->getOption('namespace')) {
+            $this->namespace = $namespace;
+        }
+
+        #If the namespace is defined with backslashes replace with forward slashes
+        $this->namespace = str_replace('\\\\', '/', $this->namespace);
+        $this->namespace = str_replace('\\', '/', $this->namespace);
+        #If the namespace is defined with double forward slashes replace by single to then reset to double
+        $this->namespace = str_replace('//', '/', $this->namespace);
 
         try {
             $this->generateTsInterfaces($io, $force);
@@ -88,6 +108,10 @@ class GenerateTsInterfacesCommand extends Command
         foreach ($files as $file) {
             $relativePath = ltrim(str_replace($this->inputDirectory, '', $file), '/');
             $className = $this->namespace . str_replace(['.php', '/'], ['', '\\'], $relativePath);
+            $className = str_replace('/', '\\', $className);
+
+            //We need to require the file to make sure the ReflectionClass will be able to create the class
+            require_once $file;
 
             $reflector = new ReflectionClass($className);
 
@@ -101,6 +125,7 @@ class GenerateTsInterfacesCommand extends Command
             foreach ($properties as $property) {
                 $columnAttributes = $property->getAttributes(Column::class);
                 $manyToOneAttributes = $property->getAttributes(ManyToOne::class);
+                $manyToManyAttributes = $property->getAttributes(ManyToMany::class);
                 $oneToManyAttributes = $property->getAttributes(OneToMany::class);
                 $joinColumnAttributes = $property->getAttributes(JoinColumn::class);
 
@@ -113,9 +138,48 @@ class GenerateTsInterfacesCommand extends Command
                 $propertyType = $propertyType?->getName();
 
                 $target = null;
+
                 if ($propertyType === 'Doctrine\Common\Collections\Collection') {
-                    $reflexionAttribute = $oneToManyAttributes[0];
+                    //If it is a one to many get the target from the OneToMany Attributes, if it is a ManyToMany get it from those attributes
+                    if ($oneToManyAttributes) {
+                        $reflexionAttribute = $oneToManyAttributes[0];
+                    } elseif ($manyToManyAttributes) {
+                        $reflexionAttribute = $manyToManyAttributes[0];
+                    } else {
+                        throw new \Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
+
+                    }
                     $target = $reflexionAttribute->getArguments()['targetEntity'];
+                }
+
+                //If the property does not have a type but an attribute of Doctrine\ORM\Mapping\Column get the type from that attribute
+                if ($propertyType === null) {
+                    /** @var ?\ReflectionAttribute $mappingColumnAttribute */
+                    $mappingColumnAttributeArray = (array_filter(
+                        $property->getAttributes(),
+                        static fn($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
+                    ));
+
+                    if ($mappingColumnAttributeArray) {
+                        $mappingColumnAttribute = reset($mappingColumnAttributeArray);
+                        $mappingColumnAttributeArguments = $mappingColumnAttribute->getArguments();
+                        if (array_key_exists('type', $mappingColumnAttributeArguments)) {
+                            $propertyType = $mappingColumnAttributeArguments['type'];
+                        }
+                    }
+                }
+
+                //If the property is still not set see if it is Gedmo Blameable, if so it will be a string, if the blameable was set as an entity the target will have been set
+                if ($propertyType === null) {
+                    /** @var ?\ReflectionAttribute $mappingColumnAttribute */
+                    $blameableAttributeArray = (array_filter(
+                        $property->getAttributes(),
+                        static fn($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
+                    ));
+
+                    if ($blameableAttributeArray) {
+                        $propertyType = 'string';
+                    }
                 }
 
                 $tsType = $this->mapPhpTypeToTsType($propertyType, $target);
@@ -142,7 +206,7 @@ class GenerateTsInterfacesCommand extends Command
             }
 
             file_put_contents($typePath, $typeScriptInterface);
-            $io->info(sprintf('generated %s', $typePath));
+            $io->info(sprintf('%s generated for %s', $typePath, $className));
         }
         $io->progressFinish();
     }
@@ -150,8 +214,10 @@ class GenerateTsInterfacesCommand extends Command
     private function mapPhpTypeToTsType(?string $phpType, ?string $target = null): string
     {
         if ($target) {
-            return sprintf('Array<%s>', $target);
+            $parts = explode('\\', $target);
+            return sprintf('Array<%s>', end($parts));
         }
+
 
         if ($phpType === null) {
             return 'unknown';
@@ -168,15 +234,22 @@ class GenerateTsInterfacesCommand extends Command
             'boolean' => 'boolean',
             'DateTime' => 'Date',
             'DateTimeImmutable' => 'Date',
+            'DateTimeInterface' => 'Date',
+            'datetime' => 'Date',
         ];
 
         if (isset($mapping[$phpType])) {
             return $mapping[$phpType];
         }
 
+        $quotedNamespace = preg_quote( str_replace('/', '\\', $this->namespace), '/');
+
         // Check if the PHP type is an entity and extract the class name
-        if (preg_match('/^' . preg_quote($this->namespace, '/') . '(.+)$/', $phpType, $matches)) {
-            $parts = explode('\\',$matches[1]);
+        if (preg_match(
+            '/^' .
+            $quotedNamespace .
+            '(.+)$/', $phpType, $matches)) {
+            $parts = explode('\\', $matches[1]);
             return end($parts);
         }
 
