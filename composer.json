@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "php": "^8.0",
+    "php": "^8.1",
     "symfony/http-client": "^6.1"
   },
   "autoload": {
@@ -19,9 +19,10 @@
     }
   },
   "require-dev": {
+    "roave/security-advisories": "dev-latest",
     "rector/rector": "^0.15.21",
     "symfony/framework-bundle": "^6.1",
     "symfony/phpunit-bridge": "^6.1",
-    "symfony/console": "^6.3"
+    "symfony/console": "^6.1"
   }
 }
