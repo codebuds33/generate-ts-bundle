@@ -76,6 +76,14 @@ Generate TypeScript Interfaces
 
 ```
 
+### Options
+
+You can overwrite the configured values for the namespace, inputDirectory and outputDirectory when running the commande :
+
+```bash 
+codebuds:generate-ts:interfaces --namespace=App/Test/ --inputDirectory=vendor/codebuds/generate-ts-bundle/src/Tests/data --outputDirectory=vendor/codebuds/generate-ts-bundle/src/Tests/output --force
+```
+
 ## Output 
 
 The script will try to match the types. If you have an entity that has relations it will map those to the TypeScript Interfaces.
