@@ -7,8 +7,13 @@ on:
 
 jobs:
     test:
-        runs-on: ubuntu-20.04
-
+        runs-on: ${{ matrix.operating-system }}
+        strategy:
+            matrix:
+                operating-system: [ubuntu-latest, windows-latest, macOS-latest]
+                php-versions: ['8.0', '8.1', '8.2']
+                php-unit-versions: ['9.5.10', '10']
+        name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
         steps:
             - uses: actions/checkout@v2
 
@@ -21,14 +26,14 @@ jobs:
             - name: composer
               uses: php-actions/composer@v6
               with:
-                  php_version: 8.0
+                  php_version: ${{ matrix.php-versions }}
                   php_extensions: xdebug gd
 
             - name: PHPUnit Tests
               uses: php-actions/phpunit@v3
               with:
-                  version: 9.5.10
-                  php_version: 8.2
+                  version: {{ matrix.php-unit-versions }}
+                  php_version: ${{ matrix.php-versions }}
                   php_extensions: xdebug gd
                   bootstrap: vendor/autoload.php
                   configuration: phpunit.xml.dist
