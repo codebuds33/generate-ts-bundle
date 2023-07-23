@@ -53,3 +53,4 @@ jobs:
                     add: 'badge.svg'
                     cwd: './plugin/.coverage'
                     message: 'Update PHPUnit coverage badge'
+                    new_branch: develop
