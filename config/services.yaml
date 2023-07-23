@@ -1,4 +1,9 @@
 services:
+    CodeBuds\GenerateTsBundle\Service\FileInformationService:
+        public: false
+    codebuds.generate_ts.file_information_service:
+        alias: CodeBuds\GenerateTsBundle\Service\FileInformationService
+
     CodeBuds\GenerateTsBundle\Command\GenerateTsInterfacesCommand:
         tags:
             - { name: console.command }
@@ -6,3 +11,4 @@ services:
             $namespace: '%generate_ts.namespace%'
             $inputDirectory: '%generate_ts.input_directory%'
             $outputDirectory: '%generate_ts.output_directory%'
+            $fileInformationService: '@codebuds.generate_ts.file_information_service'

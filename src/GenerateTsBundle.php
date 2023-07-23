@@ -17,8 +17,7 @@ class GenerateTsBundle extends AbstractBundle
             ->scalarNode('namespace')->defaultValue('App\Entity\\')->end()
             ->scalarNode('output_directory')->defaultValue('%kernel.project_dir%/assets/types')->end()
             ->scalarNode('input_directory')->defaultValue('%kernel.project_dir%/src/Entity')->end()
-            ->end()
-        ;
+            ->end();
     }
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
