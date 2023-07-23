@@ -26,7 +26,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
             uriTemplate: '/ingredient_categories/{id}/children',
             requirements: ['id' => '\d+'],
             name: 'get_children',
-              provider: CategoryChildrenProvider::class,
+            provider: CategoryChildrenProvider::class,
         ),
         new Get(),
         new GetCollection(),

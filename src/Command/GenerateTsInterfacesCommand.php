@@ -12,21 +12,18 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-
 #[AsCommand(
     name: 'codebuds:generate-ts:interfaces',
     description: 'Generate TS interfaces from Symfony Entities',
 )]
 class GenerateTsInterfacesCommand extends Command
 {
-
     public function __construct(
         private string                          $inputDirectory,
         private string                          $outputDirectory,
         private string                          $namespace,
         private readonly FileInformationService $fileInformationService
-    )
-    {
+    ) {
         parent::__construct();
     }
 
@@ -98,7 +95,6 @@ class GenerateTsInterfacesCommand extends Command
             $information = $this->fileInformationService->getClassInformation($file, $this->inputDirectory, $this->namespace);
             $typeScriptProperties = [];
             foreach ($information['properties'] as $property) {
-
                 $tsType = $this->fileInformationService->mapPhpTypeToTsType(
                     namespace: $this->namespace,
                     phpType: $property["type"],
@@ -121,7 +117,7 @@ class GenerateTsInterfacesCommand extends Command
 
             $outputFile .= "export interface {$interfaceName} {\n" . implode("\n", $typeScriptProperties) . "\n}\n";
 
-            $typeName = str_replace($this->inputDirectory, $this->outputDirectory, $file);
+            $typeName = str_replace($this->inputDirectory, $this->outputDirectory, (string) $file);
             $typePath = str_replace('.php', '.ts', $typeName);
 
             if (file_exists($typePath)) {

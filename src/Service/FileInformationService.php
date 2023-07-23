@@ -15,7 +15,6 @@ use ReflectionClass;
 
 class FileInformationService
 {
-
     public function getFiles(string $inputDirectory): array
     {
         $directory = new RecursiveDirectoryIterator($inputDirectory);
@@ -31,9 +30,7 @@ class FileInformationService
 
     public function getFileNames(array $files): array
     {
-        return array_map(static function ($file) {
-            return $file;
-        }, $files);
+        return array_map(static fn ($file) => $file, $files);
     }
 
     public function getClassInformation(string $file, string $inputDirectory, string $namespace): ?array
@@ -94,7 +91,6 @@ class FileInformationService
                     $reflexionAttribute = $manyToManyAttributes[0];
                 } else {
                     throw new Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
-
                 }
                 $target = $reflexionAttribute->getArguments()['targetEntity'];
             }
@@ -104,7 +100,7 @@ class FileInformationService
                 /** @var ?ReflectionAttribute $mappingColumnAttribute */
                 $mappingColumnAttributeArray = (array_filter(
                     $property->getAttributes(),
-                    static fn($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
+                    static fn ($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
                 ));
 
                 if ($mappingColumnAttributeArray) {
@@ -121,7 +117,7 @@ class FileInformationService
                 /** @var ?ReflectionAttribute $mappingColumnAttribute */
                 $blameableAttributeArray = (array_filter(
                     $property->getAttributes(),
-                    static fn($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
+                    static fn ($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
                 ));
 
                 if ($blameableAttributeArray) {
@@ -168,7 +164,10 @@ class FileInformationService
         if (preg_match(
             '/^' .
             $quotedNamespace .
-            '(.+)$/', $phpType, $matches)) {
+            '(.+)$/',
+            $phpType,
+            $matches
+        )) {
             $parts = explode('\\', $matches[1]);
             return true;
         }
@@ -233,7 +232,10 @@ class FileInformationService
         if (preg_match(
             '/^' .
             $quotedNamespace .
-            '(.+)$/', $phpType, $matches)) {
+            '(.+)$/',
+            $phpType,
+            $matches
+        )) {
             $parts = explode('\\', $matches[1]);
             return end($parts);
         }

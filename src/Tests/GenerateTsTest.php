@@ -58,7 +58,6 @@ class GenerateTsTest extends KernelTestCase
             $this->assertTrue($filesystem->exists(__DIR__ . $file['generatedPath']));
             $this->assertFileEquals(__DIR__ . $file['generatedPath'], __DIR__ . $file['expectedPath']);
         }
-
     }
 
     private function trimOutput(string $output): string
