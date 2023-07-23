@@ -2,12 +2,9 @@
 
 namespace CodeBuds\GenerateTsBundle\Command;
 
-use Doctrine\ORM\Mapping\Column;
-use Doctrine\ORM\Mapping\JoinColumn;
-use Doctrine\ORM\Mapping\ManyToMany;
-use Doctrine\ORM\Mapping\ManyToOne;
-use Doctrine\ORM\Mapping\OneToMany;
-use ReflectionClass;
+use CodeBuds\GenerateTsBundle\Service\FileInformationService;
+use ReflectionException;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,20 +12,18 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-
 #[AsCommand(
     name: 'codebuds:generate-ts:interfaces',
     description: 'Generate TS interfaces from Symfony Entities',
 )]
 class GenerateTsInterfacesCommand extends Command
 {
-
     public function __construct(
-        private string $inputDirectory,
-        private string $outputDirectory,
-        private string $namespace,
-    )
-    {
+        private string                          $inputDirectory,
+        private string                          $outputDirectory,
+        private string                          $namespace,
+        private readonly FileInformationService $fileInformationService
+    ) {
         parent::__construct();
     }
 
@@ -69,7 +64,7 @@ class GenerateTsInterfacesCommand extends Command
 
         try {
             $this->generateTsInterfaces($io, $force);
-        } catch (\ReflectionException $e) {
+        } catch (ReflectionException $e) {
             $io->error($e->getMessage());
             return Command::FAILURE;
         }
@@ -78,23 +73,14 @@ class GenerateTsInterfacesCommand extends Command
     }
 
     /**
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     private function generateTsInterfaces(SymfonyStyle $io, bool $force): void
     {
-        $directory = new \RecursiveDirectoryIterator($this->inputDirectory);
-        $iterator = new \RecursiveIteratorIterator($directory);
-        $files = [];
-        foreach ($iterator as $info) {
-            if ($info->isFile() && $info->getExtension() === 'php') {
-                $files[] = $info->getPathname();
-            }
-        }
+        $files = $this->fileInformationService->getFiles($this->inputDirectory);
 
         if (!$force) {
-            $fileNames = array_map(static function ($file) {
-                return $file;
-            }, $files);
+            $fileNames = $this->fileInformationService->getFileNames($files);
 
             $io->info('Found the following entities : ');
             $io->listing($fileNames);
@@ -106,95 +92,37 @@ class GenerateTsInterfacesCommand extends Command
         $io->progressStart(count($files));
 
         foreach ($files as $file) {
-            $relativePath = ltrim(str_replace($this->inputDirectory, '', $file), '/');
-            $className = $this->namespace . str_replace(['.php', '/'], ['', '\\'], $relativePath);
-            $className = str_replace('/', '\\', $className);
-
-            //We need to require the file to make sure the ReflectionClass will be able to create the class
-            require_once $file;
-
-            $reflector = new ReflectionClass($className);
-
-            if ($reflector->isAbstract()) {
-                continue;
-            }
-
-            $properties = $reflector->getProperties();
+            $information = $this->fileInformationService->getClassInformation($file, $this->inputDirectory, $this->namespace);
             $typeScriptProperties = [];
-
-            foreach ($properties as $property) {
-                $columnAttributes = $property->getAttributes(Column::class);
-                $manyToOneAttributes = $property->getAttributes(ManyToOne::class);
-                $manyToManyAttributes = $property->getAttributes(ManyToMany::class);
-                $oneToManyAttributes = $property->getAttributes(OneToMany::class);
-                $joinColumnAttributes = $property->getAttributes(JoinColumn::class);
-
-                if (empty($columnAttributes) && empty($manyToOneAttributes) && empty($oneToManyAttributes) && empty($joinColumnAttributes)) {
-                    continue;
-                }
-
-                $propertyName = $property->getName();
-                $propertyType = $property->getType();
-                $propertyType = $propertyType?->getName();
-
-                $target = null;
-
-                if ($propertyType === 'Doctrine\Common\Collections\Collection') {
-                    //If it is a one to many get the target from the OneToMany Attributes, if it is a ManyToMany get it from those attributes
-                    if ($oneToManyAttributes) {
-                        $reflexionAttribute = $oneToManyAttributes[0];
-                    } elseif ($manyToManyAttributes) {
-                        $reflexionAttribute = $manyToManyAttributes[0];
-                    } else {
-                        throw new \Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
-
-                    }
-                    $target = $reflexionAttribute->getArguments()['targetEntity'];
-                }
-
-                //If the property does not have a type but an attribute of Doctrine\ORM\Mapping\Column get the type from that attribute
-                if ($propertyType === null) {
-                    /** @var ?\ReflectionAttribute $mappingColumnAttribute */
-                    $mappingColumnAttributeArray = (array_filter(
-                        $property->getAttributes(),
-                        static fn($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
-                    ));
-
-                    if ($mappingColumnAttributeArray) {
-                        $mappingColumnAttribute = reset($mappingColumnAttributeArray);
-                        $mappingColumnAttributeArguments = $mappingColumnAttribute->getArguments();
-                        if (array_key_exists('type', $mappingColumnAttributeArguments)) {
-                            $propertyType = $mappingColumnAttributeArguments['type'];
-                        }
-                    }
-                }
-
-                //If the property is still not set see if it is Gedmo Blameable, if so it will be a string, if the blameable was set as an entity the target will have been set
-                if ($propertyType === null) {
-                    /** @var ?\ReflectionAttribute $mappingColumnAttribute */
-                    $blameableAttributeArray = (array_filter(
-                        $property->getAttributes(),
-                        static fn($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
-                    ));
-
-                    if ($blameableAttributeArray) {
-                        $propertyType = 'string';
-                    }
-                }
-
-                $tsType = $this->mapPhpTypeToTsType($propertyType, $target);
-                $typeScriptProperties[] = "  {$propertyName}: {$tsType};";
+            foreach ($information['properties'] as $property) {
+                $tsType = $this->fileInformationService->mapPhpTypeToTsType(
+                    namespace: $this->namespace,
+                    phpType: $property["type"],
+                    target: $property["target"],
+                );
+                $typeScriptProperties[] = "  {$property['name']}: {$tsType};";
             }
 
-            $interfaceName = $reflector->getShortName();
-            $typeScriptInterface = "export interface {$interfaceName} {\n" . implode("\n", $typeScriptProperties) . "\n}\n";
+            $interfaceName = $information['interface']['shortName'];
 
-            $typeName = str_replace($this->inputDirectory, $this->outputDirectory, $file);
+            $outputFile = '';
+
+            foreach ($information['imports'] as $target) {
+                $outputFile .= sprintf("import {%s} from \"../%s\"\n", $target['name'], $target['path']);
+            }
+
+            if ($outputFile !== '') {
+                $outputFile .= "\n";
+            }
+
+            $outputFile .= "export interface {$interfaceName} {\n" . implode("\n", $typeScriptProperties) . "\n}\n";
+
+            $typeName = str_replace($this->inputDirectory, $this->outputDirectory, (string) $file);
             $typePath = str_replace('.php', '.ts', $typeName);
 
             if (file_exists($typePath)) {
                 $existingContent = file_get_contents($typePath);
-                if ($existingContent === $typeScriptInterface) {
+                if ($existingContent === $outputFile) {
                     $io->note(sprintf('No changes for %s', $typePath));
                     $io->progressAdvance();
                     continue;
@@ -202,57 +130,12 @@ class GenerateTsInterfacesCommand extends Command
             }
 
             if (!is_dir(dirname($typePath)) && !mkdir($concurrentDirectory = dirname($typePath), 0777, true) && !is_dir($concurrentDirectory)) {
-                throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
 
-            file_put_contents($typePath, $typeScriptInterface);
-            $io->info(sprintf('%s generated for %s', $typePath, $className));
+            file_put_contents($typePath, $outputFile);
+            $io->info(sprintf('%s generated for %s', $typePath, $information['interface']['className']));
         }
         $io->progressFinish();
-    }
-
-    private function mapPhpTypeToTsType(?string $phpType, ?string $target = null): string
-    {
-        if ($target) {
-            $parts = explode('\\', $target);
-            return sprintf('Array<%s>', end($parts));
-        }
-
-
-        if ($phpType === null) {
-            return 'unknown';
-        }
-
-        $mapping = [
-            'string' => 'string',
-            'text' => 'string',
-            'int' => 'number',
-            'integer' => 'number',
-            'float' => 'number',
-            'double' => 'number',
-            'bool' => 'boolean',
-            'boolean' => 'boolean',
-            'DateTime' => 'Date',
-            'DateTimeImmutable' => 'Date',
-            'DateTimeInterface' => 'Date',
-            'datetime' => 'Date',
-        ];
-
-        if (isset($mapping[$phpType])) {
-            return $mapping[$phpType];
-        }
-
-        $quotedNamespace = preg_quote( str_replace('/', '\\', $this->namespace), '/');
-
-        // Check if the PHP type is an entity and extract the class name
-        if (preg_match(
-            '/^' .
-            $quotedNamespace .
-            '(.+)$/', $phpType, $matches)) {
-            $parts = explode('\\', $matches[1]);
-            return end($parts);
-        }
-
-        return 'unknown';
     }
 }

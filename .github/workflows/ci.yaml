@@ -2,55 +2,54 @@ name: CI-coverage
 
 on:
     push:
-        branches:
-            - develop
-
+        tags:
+            - '*.*.*'
 jobs:
     test:
         runs-on: ${{ matrix.operating-system }}
         strategy:
             matrix:
-                operating-system: [ubuntu-latest]
-                php-versions: ['8.1', '8.2']
-                php-unit-versions: ['9.5', '10.2']
+                operating-system: [ ubuntu-latest ]
+                php-versions: [ '8.1', '8.2' ]
+                php-unit-versions: [ '9.5', '10.2' ]
         name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} - PHPUnit ${{ matrix.php-unit-versions }}
         steps:
-            - uses: actions/checkout@v2
+            -   uses: actions/checkout@v3
 
-            - name: Cache Composer dependencies
-              uses: actions/cache@v2
-              with:
-                  path: /tmp/composer-cache
-                  key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+            -   name: Cache Composer dependencies
+                uses: actions/cache@v3
+                with:
+                    path: /tmp/composer-cache
+                    key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
 
-            - name: composer
-              uses: php-actions/composer@v6
-              with:
-                  php_version: ${{ matrix.php-versions }}
-                  php_extensions: xdebug gd
+            -   name: composer
+                uses: php-actions/composer@v6
+                with:
+                    php_version: ${{ matrix.php-versions }}
+                    php_extensions: xdebug gd
 
-            - name: PHPUnit Tests
-              uses: php-actions/phpunit@v3
-              with:
-                  version: ${{ matrix.php-unit-versions }}
-                  php_version: ${{ matrix.php-versions }}
-                  php_extensions: xdebug gd
-                  bootstrap: vendor/autoload.php
-                  configuration: phpunit.xml.dist
-                  args: --coverage-clover coverage.xml
-              env:
-                  XDEBUG_MODE: coverage
+            -   name: PHPUnit Tests
+                uses: php-actions/phpunit@v3
+                with:
+                    version: ${{ matrix.php-unit-versions }}
+                    php_version: ${{ matrix.php-versions }}
+                    php_extensions: xdebug gd
+                    bootstrap: vendor/autoload.php
+                    configuration: phpunit.xml.dist
+                    args: --coverage-clover coverage.xml
+                env:
+                    XDEBUG_MODE: coverage
 
 
-            - name: Generate PHPUnit coverage badge
-              uses: timkrase/phpunit-coverage-badge@v1.2.0
-              with:
-                  report: 'coverage.xml'
-                  coverage_badge_path: 'plugin/.coverage/badge.svg'
+            -   name: Generate PHPUnit coverage badge
+                uses: timkrase/phpunit-coverage-badge@v1.2.0
+                with:
+                    report: 'coverage.xml'
+                    coverage_badge_path: 'plugin/.coverage/badge.svg'
 
-            - name: Commit PHPUnit coverage badge
-              uses: EndBug/add-and-commit@v7
-              with:
-                  add: 'badge.svg'
-                  cwd: './plugin/.coverage'
-                  message: 'Update PHPUnit coverage badge'
+            -   name: Commit PHPUnit coverage badge
+                uses: EndBug/add-and-commit@v9
+                with:
+                    add: 'badge.svg'
+                    cwd: './plugin/.coverage'
+                    message: 'Update PHPUnit coverage badge'
