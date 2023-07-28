@@ -2,10 +2,8 @@ name: CI-coverage
 
 on:
     push:
-        branches:
-            - develop
-#        tags:
-#            - '*.*.*'
+        tags:
+            - '*.*.*'
 jobs:
     test:
         runs-on: ${{ matrix.operating-system }}
