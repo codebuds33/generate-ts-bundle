@@ -41,5 +41,5 @@ class Tree
 
     #[ORM\OneToMany(mappedBy: 'parent', targetEntity: Tree::class)]
     #[ORM\OrderBy(['lft' => 'ASC'])]
-    private ?Collection $children;
+    private readonly ?Collection $children;
 }

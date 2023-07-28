@@ -26,8 +26,7 @@ class GenerateTsInterfacesCommand extends Command
         private string                          $namespace,
         private readonly FileGenerationService  $fileGenerationService,
         private readonly FileInformationService $fileInformationService,
-    )
-    {
+    ) {
         parent::__construct();
     }
 
@@ -81,7 +80,9 @@ class GenerateTsInterfacesCommand extends Command
 
         foreach ($files as $file) {
             $output = $this->fileGenerationService->generateTypescriptInterfaceFileContent(
-                file: $file, inputDirectory: $this->inputDirectory, namespace: $this->namespace
+                file: $file,
+                inputDirectory: $this->inputDirectory,
+                namespace: $this->namespace
             );
 
             $typeName = str_replace($this->inputDirectory, $this->outputDirectory, (string)$file);

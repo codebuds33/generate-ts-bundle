@@ -4,9 +4,9 @@ namespace CodeBuds\GenerateTsBundle\Service;
 
 use Exception;
 
-readonly class FileGenerationService
+class FileGenerationService
 {
-    public function __construct(private FileInformationService $fileInformationService)
+    public function __construct(private readonly FileInformationService $fileInformationService)
     {
     }
 
