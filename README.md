@@ -27,7 +27,7 @@ You can overwrite these default configurations by creating a YAML file named ins
 generate_ts:
     namespace: 'App\CustomNamespace\'
     type_output_directory: '%kernel.project_dir%/custom/types'
-    interface_output_directory: '%kernel.project_dir%/custom/types'
+    interface_output_directory: '%kernel.project_dir%/custom/interfaces'
     input_directory: '%kernel.project_dir%/custom/Entity'
 ```
 

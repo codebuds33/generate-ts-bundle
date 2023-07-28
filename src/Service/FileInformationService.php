@@ -16,7 +16,6 @@ use ReflectionClass;
 
 class FileInformationService
 {
-
     public function getFiles(string $inputDirectory): array
     {
         $directory = new RecursiveDirectoryIterator($inputDirectory);
@@ -32,7 +31,7 @@ class FileInformationService
 
     public function getFileNames(array $files): array
     {
-        return array_map(static fn($file) => $file, $files);
+        return array_map(static fn ($file) => $file, $files);
     }
 
     public function getClassInformation(string $file, string $inputDirectory, string $namespace): ?array
@@ -104,7 +103,7 @@ class FileInformationService
                 /** @var ?ReflectionAttribute $mappingColumnAttribute */
                 $mappingColumnAttributeArray = (array_filter(
                     $property->getAttributes(),
-                    static fn($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
+                    static fn ($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
                 ));
 
                 if ($mappingColumnAttributeArray) {
@@ -122,7 +121,7 @@ class FileInformationService
                 /** @var ?ReflectionAttribute $mappingColumnAttribute */
                 $blameableAttributeArray = (array_filter(
                     $property->getAttributes(),
-                    static fn($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
+                    static fn ($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
                 ));
 
                 if ($blameableAttributeArray) {

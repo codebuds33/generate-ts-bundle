@@ -3,7 +3,8 @@ name: CI-coverage
 on:
     push:
         tags:
-            - '*.*.*'
+            - develop
+#            - '*.*.*'
 jobs:
     test:
         runs-on: ${{ matrix.operating-system }}
@@ -12,6 +13,7 @@ jobs:
                 operating-system: [ ubuntu-latest ]
                 php-versions: [ '8.1', '8.2' ]
                 php-unit-versions: [ '9.5', '10.2' ]
+                composer-arguments: ['', '--prefer-lowest']
         name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} - PHPUnit ${{ matrix.php-unit-versions }}
         steps:
             -   uses: actions/checkout@v3
@@ -26,6 +28,7 @@ jobs:
                 uses: php-actions/composer@v6
                 with:
                     php_version: ${{ matrix.php-versions }}
+                    args: ${{ matrix.composer-arguments }}
                     php_extensions: xdebug gd
 
             -   name: PHPUnit Tests
