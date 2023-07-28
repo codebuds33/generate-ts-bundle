@@ -14,7 +14,7 @@ jobs:
                 operating-system: [ ubuntu-latest ]
                 php-versions: [ '8.1', '8.2' ]
                 php-unit-versions: [ '9.5', '10.2' ]
-                composer-arguments: ['', '--prefer-lowest']
+                symfony-versions: [ '6.1', '6.2', '6.3' ]
         name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} - PHPUnit ${{ matrix.php-unit-versions }}
         steps:
             -   uses: actions/checkout@v3
@@ -23,13 +23,15 @@ jobs:
                 uses: actions/cache@v3
                 with:
                     path: /tmp/composer-cache
-                    key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+                    key: ${{ runner.os }}-${{ matrix.symfony-versions }}-${{ hashFiles('**/composer.lock') }}
+
+            - name: Install Symfony
+              run: composer require symfony/framework-bundle:${{ matrix.symfony-versions }}
 
             -   name: composer
                 uses: php-actions/composer@v6
                 with:
                     php_version: ${{ matrix.php-versions }}
-                    args: ${{ matrix.composer-arguments }}
                     php_extensions: xdebug gd
 
             -   name: PHPUnit Tests
