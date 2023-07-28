@@ -175,21 +175,6 @@ export type Root = {
 }
 ```
 
-
-Imports are also written to the TS files
-
-```ts
-import {Tomato} from "../Ingredients/Tomato"
-import {Cucumber} from "../Ingredients/Cucumber"
-
-export interface Salade {
-  id: number;
-  tomato: Array<Tomato>;
-  cucumber: Cucumber;
-}
-
-```
-
 ### Subdirectories
 
 The bundle will automatically scan through all PHP files in the input_directory, including those in subdirectories. The resulting TypeScript files will maintain the same directory structure as your PHP entities.
