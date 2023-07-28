@@ -2,8 +2,9 @@ name: CI-coverage
 
 on:
     push:
-        tags:
+        branches:
             - develop
+#        tags:
 #            - '*.*.*'
 jobs:
     test:
