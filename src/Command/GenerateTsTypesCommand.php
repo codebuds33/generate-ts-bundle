@@ -14,12 +14,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
-    name: 'codebuds:generate-ts:interfaces',
-    description: 'Generate TS interfaces from Symfony Entities',
+    name: 'codebuds:generate-ts:types',
+    description: 'Generate TS types from Symfony Entities',
 )]
-class GenerateTsInterfacesCommand extends Command
+class GenerateTsTypesCommand extends Command
 {
     use GenerateTsFilesCommandTrait;
+
     public function __construct(
         private string                          $inputDirectory,
         private string                          $outputDirectory,
@@ -44,14 +45,14 @@ class GenerateTsInterfacesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $io->title('Generate TypeScript Interfaces');
+        $io->title('Generate TypeScript Types');
 
         $force = $input->getOption('force');
 
         $this->initArguments($input);
 
         try {
-            $this->generateTsInterfaces($io, $force);
+            $this->generateTsTypes($io, $force);
         } catch (ReflectionException $e) {
             $io->error($e->getMessage());
             return Command::FAILURE;
@@ -63,7 +64,7 @@ class GenerateTsInterfacesCommand extends Command
     /**
      * @throws ReflectionException
      */
-    private function generateTsInterfaces(SymfonyStyle $io, bool $force): void
+    private function generateTsTypes(SymfonyStyle $io, bool $force): void
     {
         $files = $this->fileInformationService->getFiles($this->inputDirectory);
 
@@ -80,7 +81,7 @@ class GenerateTsInterfacesCommand extends Command
         $io->progressStart(count($files));
 
         foreach ($files as $file) {
-            $output = $this->fileGenerationService->generateTypescriptInterfaceFileContent(
+            $output = $this->fileGenerationService->generateTypescriptTypeFileContent(
                 file: $file, inputDirectory: $this->inputDirectory, namespace: $this->namespace
             );
 

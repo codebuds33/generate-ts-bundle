@@ -16,7 +16,8 @@ composer require codebuds/ts-generator-bundle
 This bundle provides three configurable parameters with default values:
 
 - namespace: The PHP namespace for your entities. Default value is 'App\Entity\'.
-- output_directory: The directory where the generated TypeScript files will be stored. Default value is '%kernel.project_dir%/assets/types'.
+- interface_output_directory: The directory where the generated TypeScript interface files will be stored. Default value is '%kernel.project_dir%/assets/interfaces'.
+- type_output_directory: The directory where the generated TypeScript type files will be stored. Default value is '%kernel.project_dir%/assets/types'.
 - input_directory: The directory containing the PHP files that will be used for TypeScript generation. Default value is '%kernel.project_dir%/src/Entity'.
 
 You can overwrite these default configurations by creating a YAML file named inside your config directory:
@@ -25,7 +26,8 @@ You can overwrite these default configurations by creating a YAML file named ins
 #config/generate_ts.yaml
 generate_ts:
     namespace: 'App\CustomNamespace\'
-    output_directory: '%kernel.project_dir%/custom/types'
+    type_output_directory: '%kernel.project_dir%/custom/types'
+    interface_output_directory: '%kernel.project_dir%/custom/types'
     input_directory: '%kernel.project_dir%/custom/Entity'
 ```
 
@@ -37,41 +39,43 @@ To generate TypeScript interfaces, run the following command:
 php bin/console codebuds:generate-ts:interfaces --force
 ```
 
+To generate TypeScript types, run the following command:
+
+```bash
+php bin/console codebuds:generate-ts:types --force
+```
+
 Here is the output when the command generates new interfaces:
 
 ```bash
 Generate TypeScript Interfaces
 ==============================
 
- 0/3 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0%                                                                                                                        
- [INFO] generated /srv/app/assets/types/IngredientCategory.ts                                                           
-                                                                                                                        
-
-                                                                                                                        
- [INFO] generated /srv/app/assets/types/User.ts                                                                         
-                                                                                                                        
-
-                                                                                                                        
- [INFO] generated /srv/app/assets/types/Ingredients/Tomato.ts                                                           
-                                                                                                                        
+ 0/3 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0%     
+                                                                                                                    
+ [INFO] /srv/app/assets/interfaces/Sub1/SubSub1/SubSubEntity2.ts generated for /srv/app/src/Entity/Sub1/SubSub1/SubSubEntity2.php                                                       
+                                                                                                                                                   
+ [INFO] /srv/app/assets/interfaces/Sub2/SubEntity2.ts generated for /srv/app/src/Entity/Sub2/SubEntity2.php      
+                                                                                                                 
+ [INFO] /srv/app/assets/interfaces/Root.ts generated for /srv/app/src/Entity/Root.php                                                         
 
  3/3 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
 ```
 
-If nothing changes in the output you will get 
-
+If nothing changes in the output you will get
 
 ```bash
 Generate TypeScript Interfaces
 ==============================
 
  0/3 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 
- ! [NOTE] No changes for /srv/app/assets/types/IngredientCategory.ts                                                    
+ 
+ ! [NOTE] No changes for /srv/app/assets/interfaces/Sub1/SubSub1/SubSubEntity2.ts                                       
 
- ! [NOTE] No changes for /srv/app/assets/types/User.ts                                                                  
+ ! [NOTE] No changes for /srv/app/assets/interfaces/Sub2/SubEntity2.ts                                                  
 
- ! [NOTE] No changes for /srv/app/assets/types/Ingredients/Tomato.ts                                                    
-
+ ! [NOTE] No changes for /srv/app/assets/interfaces/Root.ts     
+ 
  3/3 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
 
 ```
@@ -93,124 +97,81 @@ With an Entity like :
 ```php
 <?php
 
-namespace App\Entity;
+namespace App\Test;
 
-use App\Repository\IngredientCategoryRepository;
-use App\State\IngredientCategory\CategoryChildrenProvider;
-use App\State\IngredientCategory\RootCategoriesProvider;
-use Doctrine\Common\Collections\ArrayCollection;
+use App\Repository\RootRepository;
+use App\Test\Sub1\SubEntity1;
+use App\Test\Sub1\SubSub1\SubSubEntity1;
+use App\Test\Sub1\SubSub1\SubSubEntity2;
+use App\Test\Sub2\SubEntity2;
+use DateTimeInterface;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 
-#[Gedmo\Tree(type: 'nested')]
-#[ORM\Entity(repositoryClass: IngredientCategoryRepository::class)]
-class IngredientCategory
+#[ORM\Entity(repositoryClass: RootRepository::class)]
+class Root
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    #[ORM\ManyToOne]
+    private ?SubSubEntity1 $subSubEntity1 = null;
 
-    #[Gedmo\TreeLeft]
-    #[ORM\Column(name: 'lft')]
-    private ?int $lft = null;
+    #[ORM\OneToMany(mappedBy: 'root', targetEntity: SubSubEntity2::class)]
+    private Collection $subSubEntity2;
 
-    #[Gedmo\TreeLevel]
-    #[ORM\Column(name: 'lvl')]
-    private ?int $lvl = null;
+    #[ORM\ManyToMany(targetEntity: SubEntity1::class, inversedBy: 'roots')]
+    private Collection $subEntity1;
 
-    #[Gedmo\TreeRight]
-    #[ORM\Column(name: 'rgt')]
-    private ?int $rgt = null;
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?SubEntity2 $subEntity2 = null;
 
-    #[Gedmo\TreeRoot]
-    #[ORM\ManyToOne(targetEntity: 'IngredientCategory')]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?IngredientCategory $root = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?DateTimeInterface $datetime = null;
 
-    #[Gedmo\TreeParent]
-    #[ORM\ManyToOne(targetEntity: 'IngredientCategory', inversedBy: 'children')]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?IngredientCategory $parent = null;
-
-    #[MaxDepth(1)]
-    #[ORM\OneToMany(mappedBy: 'parent', targetEntity: 'IngredientCategory')]
-    #[ORM\OrderBy(['lft' => 'ASC'])]
-    private ?Collection $children;
-
-    public function __construct()
-    {
-        $this->children = new ArrayCollection();
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    public function setId(?int $id): IngredientCategory
-    {
-        $this->id = $id;
-        return $this;
-    }
-
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    public function setName(?string $name): IngredientCategory
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    public function getRoot(): ?IngredientCategory
-    {
-        return $this->root;
-    }
-
-    public function getParent(): ?IngredientCategory
-    {
-        return $this->parent;
-    }
-
-    public function setParent(?IngredientCategory $parent): IngredientCategory
-    {
-        $this->parent = $parent;
-        return $this;
-    }
-
-    public function getChildren(): ?Collection
-    {
-        return $this->children;
-    }
-
-    public function setChildren(?Collection $children): IngredientCategory
-    {
-        $this->children = $children;
-        return $this;
-    }
+    #[ORM\Column(type: Types::TEXT)]
+    private ?string $text = null;
 }
 ```
 
-The output will be :
+The interface output will be :
 
 ```ts
-export interface IngredientCategory {
+import {SubSubEntity1} from "./Sub1/SubSub1/SubSubEntity1"
+import {SubSubEntity2} from "./Sub1/SubSub1/SubSubEntity2"
+import {SubEntity1} from "./Sub1/SubEntity1"
+import {SubEntity2} from "./Sub2/SubEntity2"
+
+export interface Root {
   id: number;
-  name: string;
-  lft: number;
-  lvl: number;
-  rgt: number;
-  root: IngredientCategory;
-  parent: IngredientCategory;
-  children: Array<IngredientCategory>;
+  subSubEntity1: SubSubEntity1;
+  subSubEntity2: Array<SubSubEntity2>;
+  subEntity1: Array<SubEntity1>;
+  subEntity2: SubEntity2;
+  datetime: Date;
+  text: string;
+}
+```
+
+The type output will be :
+
+```ts
+import {SubSubEntity1} from "./Sub1/SubSub1/SubSubEntity1"
+import {SubSubEntity2} from "./Sub1/SubSub1/SubSubEntity2"
+import {SubEntity1} from "./Sub1/SubEntity1"
+import {SubEntity2} from "./Sub2/SubEntity2"
+
+export type Root = {
+  id: number;
+  subSubEntity1: SubSubEntity1;
+  subSubEntity2: Array<SubSubEntity2>;
+  subEntity1: Array<SubEntity1>;
+  subEntity2: SubEntity2;
+  datetime: Date;
+  text: string;
 }
 ```
 

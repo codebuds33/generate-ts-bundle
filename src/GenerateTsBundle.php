@@ -14,7 +14,8 @@ class GenerateTsBundle extends AbstractBundle
         $definition->rootNode()
             ->children()
             ->scalarNode('namespace')->defaultValue('App\Entity\\')->end()
-            ->scalarNode('output_directory')->defaultValue('%kernel.project_dir%/assets/types')->end()
+            ->scalarNode('interface_output_directory')->defaultValue('%kernel.project_dir%/assets/interfaces')->end()
+            ->scalarNode('type_output_directory')->defaultValue('%kernel.project_dir%/assets/types')->end()
             ->scalarNode('input_directory')->defaultValue('%kernel.project_dir%/src/Entity')->end()
             ->end();
     }
@@ -23,12 +24,14 @@ class GenerateTsBundle extends AbstractBundle
     {
         $container->import('../config/services.yaml');
         $namespace = $config['namespace'];
-        $outputDirectory = $config['output_directory'];
+        $interfaceOutputDirectory = $config['interface_output_directory'];
+        $typeOutputDirectory = $config['type_output_directory'];
         $inputDirectory = $config['input_directory'];
 
         // Set the namespace as a parameter in the service container
         $builder->setParameter('generate_ts.namespace', $namespace);
-        $builder->setParameter('generate_ts.output_directory', $outputDirectory);
+        $builder->setParameter('generate_ts.interface_output_directory', $interfaceOutputDirectory);
+        $builder->setParameter('generate_ts.type_output_directory', $typeOutputDirectory);
         $builder->setParameter('generate_ts.input_directory', $inputDirectory);
     }
 }
