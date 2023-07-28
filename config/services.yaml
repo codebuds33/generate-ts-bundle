@@ -1,8 +1,16 @@
 services:
+
     CodeBuds\GenerateTsBundle\Service\FileInformationService:
         public: false
     codebuds.generate_ts.file_information_service:
         alias: CodeBuds\GenerateTsBundle\Service\FileInformationService
+
+    CodeBuds\GenerateTsBundle\Service\FileGenerationService:
+        public: false
+        arguments:
+            $fileInformationService: '@codebuds.generate_ts.file_information_service'
+    codebuds.generate_ts.file_generation_service:
+        alias: CodeBuds\GenerateTsBundle\Service\FileGenerationService
 
     CodeBuds\GenerateTsBundle\Command\GenerateTsInterfacesCommand:
         tags:
@@ -10,5 +18,16 @@ services:
         arguments:
             $namespace: '%generate_ts.namespace%'
             $inputDirectory: '%generate_ts.input_directory%'
-            $outputDirectory: '%generate_ts.output_directory%'
+            $outputDirectory: '%generate_ts.interface_output_directory%'
+            $fileGenerationService: '@codebuds.generate_ts.file_generation_service'
+            $fileInformationService: '@codebuds.generate_ts.file_information_service'
+
+    CodeBuds\GenerateTsBundle\Command\GenerateTsTypesCommand:
+        tags:
+            - { name: console.command }
+        arguments:
+            $namespace: '%generate_ts.namespace%'
+            $inputDirectory: '%generate_ts.input_directory%'
+            $outputDirectory: '%generate_ts.type_output_directory%'
+            $fileGenerationService: '@codebuds.generate_ts.file_generation_service'
             $fileInformationService: '@codebuds.generate_ts.file_information_service'

@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping\JoinColumn;
 use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\ORM\Mapping\OneToOne;
 use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -15,6 +16,7 @@ use ReflectionClass;
 
 class FileInformationService
 {
+
     public function getFiles(string $inputDirectory): array
     {
         $directory = new RecursiveDirectoryIterator($inputDirectory);
@@ -30,7 +32,7 @@ class FileInformationService
 
     public function getFileNames(array $files): array
     {
-        return array_map(static fn ($file) => $file, $files);
+        return array_map(static fn($file) => $file, $files);
     }
 
     public function getClassInformation(string $file, string $inputDirectory, string $namespace): ?array
@@ -65,14 +67,16 @@ class FileInformationService
             $manyToOneAttributes = $property->getAttributes(ManyToOne::class);
             $manyToManyAttributes = $property->getAttributes(ManyToMany::class);
             $oneToManyAttributes = $property->getAttributes(OneToMany::class);
+            $oneToOneAttributes = $property->getAttributes(OneToOne::class);
             $joinColumnAttributes = $property->getAttributes(JoinColumn::class);
 
             if (
                 empty($columnAttributes) &&
                 empty($manyToOneAttributes) &&
                 empty($oneToManyAttributes) &&
-                empty($joinColumnAttributes) &&
-                empty($manyToManyAttributes)
+                empty($manyToManyAttributes) &&
+                empty($oneToOneAttributes) &&
+                empty($joinColumnAttributes)
             ) {
                 continue;
             }
@@ -100,7 +104,7 @@ class FileInformationService
                 /** @var ?ReflectionAttribute $mappingColumnAttribute */
                 $mappingColumnAttributeArray = (array_filter(
                     $property->getAttributes(),
-                    static fn ($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
+                    static fn($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
                 ));
 
                 if ($mappingColumnAttributeArray) {
@@ -112,12 +116,13 @@ class FileInformationService
                 }
             }
 
-            //If the property is still not set see if it is Gedmo Blameable, if so it will be a string, if the blameable was set as an entity the target will have been set
+            //If the property is still not set see if it is Gedmo Blameable, if so it will be a string,
+            // if the blameable was set as an entity the target will have been set
             if ($propertyType === null) {
                 /** @var ?ReflectionAttribute $mappingColumnAttribute */
                 $blameableAttributeArray = (array_filter(
                     $property->getAttributes(),
-                    static fn ($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
+                    static fn($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
                 ));
 
                 if ($blameableAttributeArray) {
@@ -125,7 +130,7 @@ class FileInformationService
                 }
             }
 
-            //For a many to one set the property as the target
+            //For a ManyToOne set the property as the target
             if ($this->checkIfTypeIsEntity(namespace: $namespace, phpType: $propertyType)) {
                 $imports[] = $propertyType;
             }
@@ -143,7 +148,7 @@ class FileInformationService
         }
 
         foreach ($imports as $import) {
-            $importData = $this->getImportData($import, $namespace, $shortName);
+            $importData = $this->getImportData(targetClass: $import, namespace: $namespace, className: $className);
             if ($importData) {
                 $data['imports'][$importData['name']] = $importData;
             }
@@ -168,32 +173,65 @@ class FileInformationService
             $phpType,
             $matches
         )) {
-            $parts = explode('\\', $matches[1]);
             return true;
         }
 
         return false;
     }
 
-    private function getImportData(string $targetClass, string $namespace, string $shortName): ?array
+    private function getImportData(string $targetClass, string $namespace, string $className): ?array
     {
         $classNamePrefix = str_replace('/', '\\', $namespace);
         $target = str_replace($classNamePrefix, '', $targetClass);
+        $class = str_replace($classNamePrefix, '', $className);
 
         //No need to import a class that references itself
-        if ($target === $shortName) {
+        if ($target === $class) {
             return null;
         }
 
-        $pathLevels = explode('\\', $target);
+        $targetPathLevels = explode('\\', $targetClass);
 
-        $targetName = end($pathLevels);
-        $targetPath = str_replace('\\', '/', $target);
+        $targetName = end($targetPathLevels);
+
+        $importPath = $this->generateImportPath($className, $targetClass);
 
         return [
             'name' => $targetName,
-            'path' => $targetPath
+            'path' => $importPath
         ];
+    }
+
+    public function generateImportPath(string $className, string $targetClassName): string
+    {
+        $currentPath = str_replace('\\', '/', $className);
+        $targetPath = str_replace('\\', '/', $targetClassName);
+
+        $currentParts = explode('/', $currentPath);
+        $targetParts = explode('/', $targetPath);
+
+        // Calculate the common prefix of both paths
+        $commonPrefix = [];
+        for ($i = 0; $i < min(count($currentParts), count($targetParts)); $i++) {
+            if ($currentParts[$i] === $targetParts[$i]) {
+                $commonPrefix[] = $currentParts[$i];
+            } else {
+                break;
+            }
+        }
+
+        // Calculate the relative path from the current class to the target class
+        $parentCount = count($currentParts) - count($commonPrefix) - 1;
+        $relativePath = str_repeat('../', $parentCount);
+
+        if ($relativePath === '') {
+            $relativePath = './';
+        }
+
+        $targetSubPath = implode('/', array_slice($targetParts, count($commonPrefix)));
+        $relativePath .= $targetSubPath;
+
+        return $relativePath;
     }
 
     public function mapPhpTypeToTsType(string $namespace, ?string $phpType, ?string $target = null): string

@@ -3,6 +3,8 @@
 namespace CodeBuds\GenerateTsBundle\Tests;
 
 use CodeBuds\GenerateTsBundle\Command\GenerateTsInterfacesCommand;
+use CodeBuds\GenerateTsBundle\Command\GenerateTsTypesCommand;
+use CodeBuds\GenerateTsBundle\Service\FileGenerationService;
 use CodeBuds\GenerateTsBundle\Service\FileInformationService;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Application;
@@ -11,31 +13,22 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class GenerateTsTest extends KernelTestCase
 {
-    public function testExecute(): void
-    {
-        $files = [
-            'IngredientCategory' => [
-                'generatedPath' => '/output/IngredientCategory.ts',
-                'expectedPath' => '/expected/IngredientCategory.ts',
-            ],
-            'Tomato' => [
-                'generatedPath' => '/output/Ingredients/Tomato.ts',
-                'expectedPath' => '/expected/Ingredients/Tomato.ts',
-            ],
-            'Cucumber' => [
-                'generatedPath' => '/output/Ingredients/Cucumber.ts',
-                'expectedPath' => '/expected/Ingredients/Cucumber.ts',
-            ],
-            'Salade' => [
-                'generatedPath' => '/output/Meals/Salade.ts',
-                'expectedPath' => '/expected/Meals/Salade.ts',
-            ],
-        ];
+    private const INPUT_FILES = [
+        'Root',
+        'Sub1/SubEntity1',
+        'Sub1/SubSub1/SubSubEntity1',
+        'Sub1/SubSub1/SubSubEntity2',
+        'Sub2/SubEntity2',
+        'Gedmo/Tree'
+    ];
 
+    public function testGenerateInterfaces(): void
+    {
+        $filePaths = self::getFilePaths("interfaces");
 
         # Remove any previously generated files before running the test
         $filesystem = new Filesystem();
-        foreach ($files as $file) {
+        foreach ($filePaths as $file) {
             $filesystem->remove(__DIR__ . $file['generatedPath']);
         }
 
@@ -43,8 +36,11 @@ class GenerateTsTest extends KernelTestCase
         $application = new Application();
         $application->add(new GenerateTsInterfacesCommand(
             inputDirectory: __DIR__ . '/data',
-            outputDirectory: __DIR__ . '/output',
+            outputDirectory: __DIR__ . '/output/interfaces',
             namespace: 'App\Test\\',
+            fileGenerationService: new FileGenerationService(
+                fileInformationService: new FileInformationService()
+            ),
             fileInformationService: new FileInformationService()
         ));
 
@@ -52,17 +48,71 @@ class GenerateTsTest extends KernelTestCase
         $commandTester = new CommandTester($command);
         $commandTester->execute(['--force' => true,]);
         $output = $commandTester->getDisplay();
-        $this->assertStringContainsString('IngredientCategory.ts generated for App\Test\IngredientCategory', $this->trimOutput($output));
+        $this->assertStringContainsString('Root.ts generated', $this->trimOutput($output));
 
-        foreach ($files as $file) {
-            $this->assertTrue($filesystem->exists(__DIR__ . $file['generatedPath']));
-            $this->assertFileEquals(__DIR__ . $file['generatedPath'], __DIR__ . $file['expectedPath']);
+        foreach ($filePaths as $file => $paths) {
+            $this->assertTrue($filesystem->exists(__DIR__ . $paths['generatedPath']));
+            $this->assertFileEquals(
+                __DIR__ . $paths['generatedPath'],
+                __DIR__ . $paths['expectedPath'],
+                sprintf('The output is different than expected for %s', $file)
+            );
         }
+    }
+
+    private static function getFilePaths(string $subDir): array
+    {
+        $filePaths = [];
+        foreach (self::INPUT_FILES as $file) {
+            $filePaths[$file] = [
+                'generatedPath' => sprintf('/output/%s/%s.ts', $subDir, $file),
+                'expectedPath' => sprintf('/expected/%s/%s.ts', $subDir, $file),
+            ];
+        }
+        return $filePaths;
     }
 
     private function trimOutput(string $output): string
     {
         $cleanedString = preg_replace('/\s+/', ' ', $output);
         return str_replace(["\n", "\r", "\t"], '', $cleanedString);
+    }
+
+    public function testGenerateTypes(): void
+    {
+        $filePaths = self::getFilePaths("types");
+
+        # Remove any previously generated files before running the test
+        $filesystem = new Filesystem();
+        foreach ($filePaths as $file) {
+            $filesystem->remove(__DIR__ . $file['generatedPath']);
+        }
+
+
+        $application = new Application();
+        $application->add(new GenerateTsTypesCommand(
+            inputDirectory: __DIR__ . '/data',
+            outputDirectory: __DIR__ . '/output/types',
+            namespace: 'App\Test\\',
+            fileGenerationService: new FileGenerationService(
+                fileInformationService: new FileInformationService()
+            ),
+            fileInformationService: new FileInformationService()
+        ));
+
+        $command = $application->find('codebuds:generate-ts:types');
+        $commandTester = new CommandTester($command);
+        $commandTester->execute(['--force' => true,]);
+        $output = $commandTester->getDisplay();
+        $this->assertStringContainsString('Root.ts generated', $this->trimOutput($output));
+
+        foreach ($filePaths as $file => $paths) {
+            $this->assertTrue($filesystem->exists(__DIR__ . $paths['generatedPath']));
+            $this->assertFileEquals(
+                __DIR__ . $paths['generatedPath'],
+                __DIR__ . $paths['expectedPath'],
+                sprintf('The output is different than expected for %s', $file)
+            );
+        }
     }
 }
