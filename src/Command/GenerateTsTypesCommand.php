@@ -73,7 +73,7 @@ class GenerateTsTypesCommand extends Command
             $io->info('Found the following entities : ');
             $io->listing($fileNames);
 
-            $io->info('use --force to generate the typescript interfaces');
+            $io->info('use --force to generate the typescript types');
             return;
         }
 

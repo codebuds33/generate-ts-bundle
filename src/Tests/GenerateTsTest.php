@@ -45,6 +45,17 @@ class GenerateTsTest extends KernelTestCase
         ));
 
         $command = $application->find('codebuds:generate-ts:interfaces');
+
+        //Test without force
+        $commandTester = new CommandTester($command);
+        $commandTester->execute([]);
+        $output = $commandTester->getDisplay();
+        $this->assertStringContainsString(
+            'Generate TypeScript Interfaces ============================== [INFO] Found the following entities : *', $this->trimOutput($output));
+        $this->assertStringContainsString(
+            'use --force to generate the typescript interface', $this->trimOutput($output));
+
+        //Test with force
         $commandTester = new CommandTester($command);
         $commandTester->execute(['--force' => true,]);
         $output = $commandTester->getDisplay();
@@ -58,6 +69,12 @@ class GenerateTsTest extends KernelTestCase
                 sprintf('The output is different than expected for %s', $file)
             );
         }
+
+        $commandTester = new CommandTester($command);
+        $commandTester->execute(['--force' => true,]);
+        $output = $commandTester->getDisplay();
+        $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
+
     }
 
     private static function getFilePaths(string $subDir): array
@@ -101,6 +118,17 @@ class GenerateTsTest extends KernelTestCase
         ));
 
         $command = $application->find('codebuds:generate-ts:types');
+
+        //Test without forcing
+        $commandTester = new CommandTester($command);
+        $commandTester->execute([]);
+        $output = $commandTester->getDisplay();
+        $this->assertStringContainsString(
+            'Generate TypeScript Types ========================= [INFO] Found the following entities : *', $this->trimOutput($output));
+        $this->assertStringContainsString(
+            'use --force to generate the typescript types', $this->trimOutput($output));
+
+        //Test with force
         $commandTester = new CommandTester($command);
         $commandTester->execute(['--force' => true,]);
         $output = $commandTester->getDisplay();
@@ -114,5 +142,11 @@ class GenerateTsTest extends KernelTestCase
                 sprintf('The output is different than expected for %s', $file)
             );
         }
+
+        //Run it again to see there are no changes
+        $commandTester = new CommandTester($command);
+        $commandTester->execute(['--force' => true,]);
+        $output = $commandTester->getDisplay();
+        $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
     }
 }
