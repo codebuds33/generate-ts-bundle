@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Test\Sub2;
+namespace App\Test\Entity\Sub2;
 
-use App\Test\Sub1\SubSub1\SubSubEntity1;
+use App\Test\Entity\Sub1\SubSub1\SubSubEntity1;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]

@@ -13,6 +13,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionEnum;
 
 class FileInformationService
 {
@@ -157,6 +158,38 @@ class FileInformationService
             'shortName' => $shortName,
             'className' => $className,
         ];
+
+        return $data;
+    }
+
+    public function getEnumInformation(string $file, string $inputDirectory, string $namespace): ?array
+    {
+        $relativePath = ltrim(str_replace($inputDirectory, '', $file), '/');
+        $enumName = $namespace . str_replace(['.php', '/'], ['', '\\'], $relativePath);
+        $enumName = str_replace('/', '\\', $enumName);
+
+        //We need to require the file to make sure the ReflectionClass will be able to create the enum
+        require_once $file;
+
+        $reflector = new ReflectionEnum($enumName);
+        $shortName = $reflector->getShortName();
+
+        if ($reflector->isAbstract()) {
+            return null;
+        }
+
+        $properties = $reflector->getConstants();
+
+        $data = [
+            'interface' => [
+                'shortName' => $shortName,
+                'className' => $enumName
+            ],
+            'properties' => $properties,
+            'imports' => [],
+        ];
+
+        $imports = [];
 
         return $data;
     }

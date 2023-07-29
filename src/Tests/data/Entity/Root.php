@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Test;
+namespace App\Test\Entity;
 
 use App\Repository\RootRepository;
-use App\Test\Sub1\SubEntity1;
-use App\Test\Sub1\SubSub1\SubSubEntity1;
-use App\Test\Sub1\SubSub1\SubSubEntity2;
-use App\Test\Sub2\SubEntity2;
+use App\Test\Entity\Sub1\SubEntity1;
+use App\Test\Entity\Sub1\SubSub1\SubSubEntity1;
+use App\Test\Entity\Sub1\SubSub1\SubSubEntity2;
+use App\Test\Entity\Sub2\SubEntity2;
 use DateTimeInterface;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;

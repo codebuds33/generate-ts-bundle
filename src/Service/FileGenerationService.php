@@ -39,6 +39,37 @@ class FileGenerationService
         return $output;
     }
 
+    public function generateTypescriptEnumFileContent(string $file, string $inputDirectory, string $namespace): string
+    {
+        [
+            'imports' => $imports,
+            'interface' => $interface,
+            'properties' => $properties,
+        ]  = $this->fileInformationService->getEnumInformation(
+            file: $file,
+            inputDirectory: $inputDirectory,
+            namespace: $namespace,
+        );
+        $output = $this->initOutput($imports);
+        $output .= "export enum {$interface['shortName']} {\n";
+
+        foreach ($properties as $property) {
+            if(property_exists($property, 'value')) {
+                $value = $property->value;
+                if(!is_int($value)) {
+                    $value = sprintf('"%s"', $value);
+                }
+
+                $output .= sprintf("\t%s = %s,\n", $property->name, $value);
+            } else {
+                $output .= sprintf("\t%s,\n", $property->name);
+            }
+        }
+
+        $output .= "}\n";
+        return $output;
+    }
+
     /**
      * @throws Exception
      */

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Test\Gedmo;
+namespace App\Test\Entity\Gedmo;
 
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
