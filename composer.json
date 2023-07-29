@@ -24,5 +24,22 @@
     "symfony/framework-bundle": "^6.1",
     "symfony/phpunit-bridge": "^6.1",
     "symfony/console": "^6.1"
+  },
+  "scripts": {
+    "cs-fix": [
+      "php-cs-fixer fix --config=.php-cs-fixer.dist.php"
+    ],
+    "rector": [
+      "./vendor/bin/rector"
+    ],
+    "clean": [
+      "composer rector && composer cs-fix"
+    ],
+    "test": [
+      "php -dxdebug.mode=debug ./vendor/bin/simple-phpunit --configuration ./phpunit.xml.dist "
+    ],
+    "coverage": [
+      "export XDEBUG_MODE=coverage && php ./vendor/bin/simple-phpunit --configuration ./phpunit.xml.dist --coverage-text"
+    ]
   }
 }

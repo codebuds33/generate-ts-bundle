@@ -7,7 +7,6 @@ use App\Test\Entity\Sub1\SubEntity1;
 use App\Test\Entity\Sub1\SubSub1\SubSubEntity1;
 use App\Test\Entity\Sub1\SubSub1\SubSubEntity2;
 use App\Test\Entity\Sub2\SubEntity2;
-use DateTimeInterface;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -33,7 +32,7 @@ class Root
     private ?SubEntity2 $subEntity2 = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?DateTimeInterface $datetime = null;
+    private ?\DateTimeInterface $datetime = null;
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $text = null;

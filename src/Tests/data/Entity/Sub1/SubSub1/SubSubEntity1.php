@@ -14,7 +14,6 @@ class SubSubEntity1
     #[ORM\Column]
     private ?int $id = null;
 
-
     #[ORM\OneToOne(inversedBy: 'subSubEntity1', cascade: ['persist', 'remove'])]
     private ?SubEntity2 $subEntity2 = null;
 

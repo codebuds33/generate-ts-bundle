@@ -31,19 +31,18 @@ class GenerateTsTest extends KernelTestCase
 
     public function testGenerateInterfaces(): void
     {
-        $filePaths = self::getFilePaths("interfaces");
+        $filePaths = self::getFilePaths('interfaces');
 
-        # Remove any previously generated files before running the test
+        // Remove any previously generated files before running the test
         $filesystem = new Filesystem();
         foreach ($filePaths as $file) {
-            $filesystem->remove(__DIR__ . $file['generatedPath']);
+            $filesystem->remove(__DIR__.$file['generatedPath']);
         }
-
 
         $application = new Application();
         $application->add(new GenerateTsInterfacesCommand(
-            inputDirectory: __DIR__ . '/data/Entity',
-            outputDirectory: __DIR__ . '/output/interfaces',
+            inputDirectory: __DIR__.'/data/Entity',
+            outputDirectory: __DIR__.'/output/interfaces',
             namespace: 'App\Test\Entity\\',
             fileGenerationService: new FileGenerationService(
                 fileInformationService: new FileInformationService()
@@ -53,52 +52,54 @@ class GenerateTsTest extends KernelTestCase
 
         $command = $application->find('codebuds:generate-ts:interfaces');
 
-        //Test without force
+        // Test without force
         $commandTester = new CommandTester($command);
         $commandTester->execute([]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString(
-            'Generate TypeScript Interfaces ============================== [INFO] Found the following entities : *', $this->trimOutput($output));
+            'Generate TypeScript Interfaces ============================== [INFO] Found the following entities : *',
+            $this->trimOutput($output)
+        );
         $this->assertStringContainsString(
-            'use --force to generate the typescript interface', $this->trimOutput($output));
+            'use --force to generate the typescript interface',
+            $this->trimOutput($output)
+        );
 
-        //Test with force
+        // Test with force
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true,]);
+        $commandTester->execute(['--force' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('Root.ts generated', $this->trimOutput($output));
 
         foreach ($filePaths as $file => $paths) {
-            $this->assertTrue($filesystem->exists(__DIR__ . $paths['generatedPath']));
+            $this->assertTrue($filesystem->exists(__DIR__.$paths['generatedPath']));
             $this->assertFileEquals(
-                __DIR__ . $paths['generatedPath'],
-                __DIR__ . $paths['expectedPath'],
+                __DIR__.$paths['generatedPath'],
+                __DIR__.$paths['expectedPath'],
                 sprintf('The output is different than expected for %s', $file)
             );
         }
 
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true,]);
+        $commandTester->execute(['--force' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
-
     }
 
     public function testGenerateTypes(): void
     {
-        $filePaths = self::getFilePaths("types");
+        $filePaths = self::getFilePaths('types');
 
-        # Remove any previously generated files before running the test
+        // Remove any previously generated files before running the test
         $filesystem = new Filesystem();
         foreach ($filePaths as $file) {
-            $filesystem->remove(__DIR__ . $file['generatedPath']);
+            $filesystem->remove(__DIR__.$file['generatedPath']);
         }
-
 
         $application = new Application();
         $application->add(new GenerateTsTypesCommand(
-            inputDirectory: __DIR__ . '/data/Entity',
-            outputDirectory: __DIR__ . '/output/types',
+            inputDirectory: __DIR__.'/data/Entity',
+            outputDirectory: __DIR__.'/output/types',
             namespace: 'App\Test\Entity\\',
             fileGenerationService: new FileGenerationService(
                 fileInformationService: new FileInformationService()
@@ -108,52 +109,55 @@ class GenerateTsTest extends KernelTestCase
 
         $command = $application->find('codebuds:generate-ts:types');
 
-        //Test without forcing
+        // Test without forcing
         $commandTester = new CommandTester($command);
         $commandTester->execute([]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString(
-            'Generate TypeScript Types ========================= [INFO] Found the following entities : *', $this->trimOutput($output));
+            'Generate TypeScript Types ========================= [INFO] Found the following entities : *',
+            $this->trimOutput($output)
+        );
         $this->assertStringContainsString(
-            'use --force to generate the typescript types', $this->trimOutput($output));
+            'use --force to generate the typescript types',
+            $this->trimOutput($output)
+        );
 
-        //Test with force
+        // Test with force
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true,]);
+        $commandTester->execute(['--force' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('Root.ts generated', $this->trimOutput($output));
 
         foreach ($filePaths as $file => $paths) {
-            $this->assertTrue($filesystem->exists(__DIR__ . $paths['generatedPath']));
+            $this->assertTrue($filesystem->exists(__DIR__.$paths['generatedPath']));
             $this->assertFileEquals(
-                __DIR__ . $paths['generatedPath'],
-                __DIR__ . $paths['expectedPath'],
+                __DIR__.$paths['generatedPath'],
+                __DIR__.$paths['expectedPath'],
                 sprintf('The output is different than expected for %s', $file)
             );
         }
 
-        //Run it again to see there are no changes
+        // Run it again to see there are no changes
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true,]);
+        $commandTester->execute(['--force' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
     }
 
     public function testGenerateEnums(): void
     {
-        $filePaths = self::getFilePaths("enums", self::ENUM_INPUT_FILES);
+        $filePaths = self::getFilePaths('enums', self::ENUM_INPUT_FILES);
 
-        # Remove any previously generated files before running the test
+        // Remove any previously generated files before running the test
         $filesystem = new Filesystem();
         foreach ($filePaths as $file) {
-            $filesystem->remove(__DIR__ . $file['generatedPath']);
+            $filesystem->remove(__DIR__.$file['generatedPath']);
         }
-
 
         $application = new Application();
         $application->add(new GenerateTsEnumsCommand(
-            inputDirectory: __DIR__ . '/data/Enum',
-            outputDirectory: __DIR__ . '/output/enums',
+            inputDirectory: __DIR__.'/data/Enum',
+            outputDirectory: __DIR__.'/output/enums',
             namespace: 'App\Test\Enum\\',
             fileGenerationService: new FileGenerationService(
                 fileInformationService: new FileInformationService()
@@ -163,36 +167,41 @@ class GenerateTsTest extends KernelTestCase
 
         $command = $application->find('codebuds:generate-ts:enums');
 
-        //Test without forcing
+        // Test without forcing
         $commandTester = new CommandTester($command);
         $commandTester->execute([]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString(
-            'Generate TypeScript Enums ========================= [INFO] Found the following enums : *', $this->trimOutput($output));
+            'Generate TypeScript Enums ========================= [INFO] Found the following enums : *',
+            $this->trimOutput($output)
+        );
         $this->assertStringContainsString(
-            'use --force to generate the typescript enums', $this->trimOutput($output));
+            'use --force to generate the typescript enums',
+            $this->trimOutput($output)
+        );
 
-        //Test with force
+        // Test with force
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true,]);
+        $commandTester->execute(['--force' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('BackedString.ts generated', $this->trimOutput($output));
 
         foreach ($filePaths as $file => $paths) {
-            $this->assertTrue($filesystem->exists(__DIR__ . $paths['generatedPath']));
+            $this->assertTrue($filesystem->exists(__DIR__.$paths['generatedPath']));
             $this->assertFileEquals(
-                __DIR__ . $paths['generatedPath'],
-                __DIR__ . $paths['expectedPath'],
+                __DIR__.$paths['generatedPath'],
+                __DIR__.$paths['expectedPath'],
                 sprintf('The output is different than expected for %s', $file)
             );
         }
 
-        //Run it again to see there are no changes
+        // Run it again to see there are no changes
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true,]);
+        $commandTester->execute(['--force' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
     }
+
     private static function getFilePaths(string $subDir, array $files = self::ENTITY_INPUT_FILES): array
     {
         $filePaths = [];
@@ -202,12 +211,14 @@ class GenerateTsTest extends KernelTestCase
                 'expectedPath' => sprintf('/expected/%s/%s.ts', $subDir, $file),
             ];
         }
+
         return $filePaths;
     }
 
     private function trimOutput(string $output): string
     {
         $cleanedString = preg_replace('/\s+/', ' ', $output);
+
         return str_replace(["\n", "\r", "\t"], '', $cleanedString);
     }
 }

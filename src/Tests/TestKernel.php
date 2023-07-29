@@ -11,7 +11,7 @@ class TestKernel extends Kernel
     public function registerBundles(): iterable
     {
         return [
-            new GenerateTsBundle()
+            new GenerateTsBundle(),
         ];
     }
 

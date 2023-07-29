@@ -2,8 +2,6 @@
 
 namespace CodeBuds\GenerateTsBundle\Service;
 
-use Exception;
-
 class FileGenerationService
 {
     public function __construct(private readonly FileInformationService $fileInformationService)
@@ -11,7 +9,7 @@ class FileGenerationService
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function generateTypescriptInterfaceFileContent(string $file, string $inputDirectory, string $namespace): string
     {
@@ -22,7 +20,8 @@ class FileGenerationService
         ] = $this->getFileInformation(file: $file, inputDirectory: $inputDirectory, namespace: $namespace);
 
         $output = $this->initOutput($imports);
-        $output .= "export interface {$name} {\n" . implode("\n", $properties) . "\n}\n";
+        $output .= "export interface {$name} {\n".implode("\n", $properties)."\n}\n";
+
         return $output;
     }
 
@@ -35,7 +34,8 @@ class FileGenerationService
         ] = $this->getFileInformation(file: $file, inputDirectory: $inputDirectory, namespace: $namespace);
 
         $output = $this->initOutput($imports);
-        $output .= "export type {$name} = {\n" . implode("\n", $properties) . "\n}\n";
+        $output .= "export type {$name} = {\n".implode("\n", $properties)."\n}\n";
+
         return $output;
     }
 
@@ -45,7 +45,7 @@ class FileGenerationService
             'imports' => $imports,
             'interface' => $interface,
             'properties' => $properties,
-        ]  = $this->fileInformationService->getEnumInformation(
+        ] = $this->fileInformationService->getEnumInformation(
             file: $file,
             inputDirectory: $inputDirectory,
             namespace: $namespace,
@@ -54,9 +54,9 @@ class FileGenerationService
         $output .= "export enum {$interface['shortName']} {\n";
 
         foreach ($properties as $property) {
-            if(property_exists($property, 'value')) {
+            if (property_exists($property, 'value')) {
                 $value = $property->value;
-                if(!is_int($value)) {
+                if (!is_int($value)) {
                     $value = sprintf('"%s"', $value);
                 }
 
@@ -67,11 +67,12 @@ class FileGenerationService
         }
 
         $output .= "}\n";
+
         return $output;
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     private function getFileInformation(string $file, string $inputDirectory, string $namespace): array
     {
@@ -84,8 +85,8 @@ class FileGenerationService
         foreach ($information['properties'] as $property) {
             $tsType = $this->fileInformationService->mapPhpTypeToTsType(
                 namespace: $namespace,
-                phpType: $property["type"],
-                target: $property["target"],
+                phpType: $property['type'],
+                target: $property['target'],
             );
             $typeScriptProperties[] = "  {$property['name']}: {$tsType};";
         }
@@ -110,6 +111,7 @@ class FileGenerationService
         if ($output !== '') {
             $output .= "\n";
         }
+
         return $output;
     }
 }

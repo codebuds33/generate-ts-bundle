@@ -8,25 +8,21 @@ use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\OneToOne;
-use Exception;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use ReflectionAttribute;
 use ReflectionClass;
-use ReflectionEnum;
 
 class FileInformationService
 {
     public function getFiles(string $inputDirectory): array
     {
-        $directory = new RecursiveDirectoryIterator($inputDirectory);
-        $iterator = new RecursiveIteratorIterator($directory);
+        $directory = new \RecursiveDirectoryIterator($inputDirectory);
+        $iterator = new \RecursiveIteratorIterator($directory);
         $files = [];
         foreach ($iterator as $info) {
             if ($info->isFile() && $info->getExtension() === 'php') {
                 $files[] = $info->getPathname();
             }
         }
+
         return $files;
     }
 
@@ -38,13 +34,13 @@ class FileInformationService
     public function getClassInformation(string $file, string $inputDirectory, string $namespace): ?array
     {
         $relativePath = ltrim(str_replace($inputDirectory, '', $file), '/');
-        $className = $namespace . str_replace(['.php', '/'], ['', '\\'], $relativePath);
+        $className = $namespace.str_replace(['.php', '/'], ['', '\\'], $relativePath);
         $className = str_replace('/', '\\', $className);
 
-        //We need to require the file to make sure the ReflectionClass will be able to create the class
+        // We need to require the file to make sure the ReflectionClass will be able to create the class
         require_once $file;
 
-        $reflector = new ReflectionClass($className);
+        $reflector = new \ReflectionClass($className);
         $shortName = $reflector->getShortName();
 
         if ($reflector->isAbstract()) {
@@ -60,7 +56,6 @@ class FileInformationService
         ];
 
         $imports = [];
-
 
         foreach ($properties as $property) {
             $columnAttributes = $property->getAttributes(Column::class);
@@ -88,24 +83,24 @@ class FileInformationService
             $target = null;
 
             if ($propertyType === 'Doctrine\Common\Collections\Collection') {
-                //If it is a one to many get the target from the OneToMany Attributes, if it is a ManyToMany get it from those attributes
+                // If it is a one to many get the target from the OneToMany Attributes, if it is a ManyToMany get it from those attributes
                 if ($oneToManyAttributes) {
                     $reflexionAttribute = $oneToManyAttributes[0];
                 } elseif ($manyToManyAttributes) {
                     $reflexionAttribute = $manyToManyAttributes[0];
                 } else {
-                    throw new Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
+                    throw new \Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
                 }
                 $target = $reflexionAttribute->getArguments()['targetEntity'];
             }
 
-            //If the property does not have a type but an attribute of Doctrine\ORM\Mapping\Column get the type from that attribute
+            // If the property does not have a type but an attribute of Doctrine\ORM\Mapping\Column get the type from that attribute
             if ($propertyType === null) {
-                /** @var ?ReflectionAttribute $mappingColumnAttribute */
-                $mappingColumnAttributeArray = (array_filter(
+                /** @var ?\ReflectionAttribute $mappingColumnAttribute */
+                $mappingColumnAttributeArray = array_filter(
                     $property->getAttributes(),
                     static fn ($attribute) => $attribute->getName() === 'Doctrine\ORM\Mapping\Column'
-                ));
+                );
 
                 if ($mappingColumnAttributeArray) {
                     $mappingColumnAttribute = reset($mappingColumnAttributeArray);
@@ -116,21 +111,21 @@ class FileInformationService
                 }
             }
 
-            //If the property is still not set see if it is Gedmo Blameable, if so it will be a string,
+            // If the property is still not set see if it is Gedmo Blameable, if so it will be a string,
             // if the blameable was set as an entity the target will have been set
             if ($propertyType === null) {
-                /** @var ?ReflectionAttribute $mappingColumnAttribute */
-                $blameableAttributeArray = (array_filter(
+                /** @var ?\ReflectionAttribute $mappingColumnAttribute */
+                $blameableAttributeArray = array_filter(
                     $property->getAttributes(),
                     static fn ($attribute) => $attribute->getName() === "Gedmo\Mapping\Annotation\Blameable"
-                ));
+                );
 
                 if ($blameableAttributeArray) {
                     $propertyType = 'string';
                 }
             }
 
-            //For a ManyToOne set the property as the target
+            // For a ManyToOne set the property as the target
             if ($this->checkIfTypeIsEntity(namespace: $namespace, phpType: $propertyType)) {
                 $imports[] = $propertyType;
             }
@@ -138,9 +133,8 @@ class FileInformationService
             $data['properties'][] = [
                 'type' => $propertyType,
                 'target' => $target,
-                'name' => $propertyName
+                'name' => $propertyName,
             ];
-
 
             if ($target) {
                 $imports[] = $target;
@@ -165,13 +159,13 @@ class FileInformationService
     public function getEnumInformation(string $file, string $inputDirectory, string $namespace): ?array
     {
         $relativePath = ltrim(str_replace($inputDirectory, '', $file), '/');
-        $enumName = $namespace . str_replace(['.php', '/'], ['', '\\'], $relativePath);
+        $enumName = $namespace.str_replace(['.php', '/'], ['', '\\'], $relativePath);
         $enumName = str_replace('/', '\\', $enumName);
 
-        //We need to require the file to make sure the ReflectionClass will be able to create the enum
+        // We need to require the file to make sure the ReflectionClass will be able to create the enum
         require_once $file;
 
-        $reflector = new ReflectionEnum($enumName);
+        $reflector = new \ReflectionEnum($enumName);
         $shortName = $reflector->getShortName();
 
         if ($reflector->isAbstract()) {
@@ -183,7 +177,7 @@ class FileInformationService
         $data = [
             'interface' => [
                 'shortName' => $shortName,
-                'className' => $enumName
+                'className' => $enumName,
             ],
             'properties' => $properties,
             'imports' => [],
@@ -199,8 +193,8 @@ class FileInformationService
         $quotedNamespace = preg_quote(str_replace('/', '\\', $namespace), '/');
 
         if (preg_match(
-            '/^' .
-            $quotedNamespace .
+            '/^'.
+            $quotedNamespace.
             '(.+)$/',
             $phpType,
             $matches
@@ -217,7 +211,7 @@ class FileInformationService
         $target = str_replace($classNamePrefix, '', $targetClass);
         $class = str_replace($classNamePrefix, '', $className);
 
-        //No need to import a class that references itself
+        // No need to import a class that references itself
         if ($target === $class) {
             return null;
         }
@@ -230,7 +224,7 @@ class FileInformationService
 
         return [
             'name' => $targetName,
-            'path' => $importPath
+            'path' => $importPath,
         ];
     }
 
@@ -244,7 +238,7 @@ class FileInformationService
 
         // Calculate the common prefix of both paths
         $commonPrefix = [];
-        for ($i = 0; $i < min(count($currentParts), count($targetParts)); $i++) {
+        for ($i = 0; $i < min(count($currentParts), count($targetParts)); ++$i) {
             if ($currentParts[$i] === $targetParts[$i]) {
                 $commonPrefix[] = $currentParts[$i];
             } else {
@@ -270,6 +264,7 @@ class FileInformationService
     {
         if ($target) {
             $parts = explode('\\', $target);
+
             return sprintf('Array<%s>', end($parts));
         }
 
@@ -300,13 +295,14 @@ class FileInformationService
 
         // Check if the PHP type is an entity and extract the class name
         if (preg_match(
-            '/^' .
-            $quotedNamespace .
+            '/^'.
+            $quotedNamespace.
             '(.+)$/',
             $phpType,
             $matches
         )) {
             $parts = explode('\\', $matches[1]);
+
             return end($parts);
         }
 
