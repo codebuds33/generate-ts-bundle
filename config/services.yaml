@@ -16,8 +16,8 @@ services:
         tags:
             - { name: console.command }
         arguments:
-            $namespace: '%generate_ts.namespace%'
-            $inputDirectory: '%generate_ts.input_directory%'
+            $namespace: '%generate_ts.entity_namespace%'
+            $inputDirectory: '%generate_ts.entity_input_directory%'
             $outputDirectory: '%generate_ts.interface_output_directory%'
             $fileGenerationService: '@codebuds.generate_ts.file_generation_service'
             $fileInformationService: '@codebuds.generate_ts.file_information_service'
@@ -26,8 +26,18 @@ services:
         tags:
             - { name: console.command }
         arguments:
-            $namespace: '%generate_ts.namespace%'
-            $inputDirectory: '%generate_ts.input_directory%'
+            $namespace: '%generate_ts.entity_namespace%'
+            $inputDirectory: '%generate_ts.entity_input_directory%'
             $outputDirectory: '%generate_ts.type_output_directory%'
+            $fileGenerationService: '@codebuds.generate_ts.file_generation_service'
+            $fileInformationService: '@codebuds.generate_ts.file_information_service'
+
+    CodeBuds\GenerateTsBundle\Command\GenerateTsEnumCommand:
+        tags:
+            - { name: console.command }
+        arguments:
+            $namespace: '%generate_ts.enum_namespace%'
+            $inputDirectory: '%generate_ts.enum_input_directory%'
+            $outputDirectory: '%generate_ts.enum_output_directory%'
             $fileGenerationService: '@codebuds.generate_ts.file_generation_service'
             $fileInformationService: '@codebuds.generate_ts.file_information_service'

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Test\Sub1;
+namespace App\Test\Entity\Sub1;
 
-use App\Test\Root;
-use App\Test\Sub1\SubSub1\SubSubEntity1;
+use App\Test\Entity\Root;
+use App\Test\Entity\Sub1\SubSub1\SubSubEntity1;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 

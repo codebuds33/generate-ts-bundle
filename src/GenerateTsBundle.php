@@ -13,25 +13,34 @@ class GenerateTsBundle extends AbstractBundle
     {
         $definition->rootNode()
             ->children()
-            ->scalarNode('namespace')->defaultValue('App\Entity\\')->end()
+            ->scalarNode('entity_namespace')->defaultValue('App\Entity\\')->end()
+            ->scalarNode('enum_namespace')->defaultValue('App\Enum\\')->end()
             ->scalarNode('interface_output_directory')->defaultValue('%kernel.project_dir%/assets/interfaces')->end()
             ->scalarNode('type_output_directory')->defaultValue('%kernel.project_dir%/assets/types')->end()
-            ->scalarNode('input_directory')->defaultValue('%kernel.project_dir%/src/Entity')->end()
+            ->scalarNode('enum_output_directory')->defaultValue('%kernel.project_dir%/assets/enums')->end()
+            ->scalarNode('entity_input_directory')->defaultValue('%kernel.project_dir%/src/Entity')->end()
+            ->scalarNode('enum_input_directory')->defaultValue('%kernel.project_dir%/src/Entity')->end()
             ->end();
     }
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $container->import('../config/services.yaml');
-        $namespace = $config['namespace'];
+        $entityNamespace = $config['entity_namespace'];
+        $enumNamespace = $config['enum_namespace'];
         $interfaceOutputDirectory = $config['interface_output_directory'];
         $typeOutputDirectory = $config['type_output_directory'];
-        $inputDirectory = $config['input_directory'];
+        $enumOutputDirectory = $config['enum_output_directory'];
+        $entityInputDirectory = $config['entity_input_directory'];
+        $enumInputDirectory = $config['enum_input_directory'];
 
         // Set the namespace as a parameter in the service container
-        $builder->setParameter('generate_ts.namespace', $namespace);
+        $builder->setParameter('generate_ts.entity_namespace', $entityNamespace);
+        $builder->setParameter('generate_ts.enum_namespace', $enumNamespace);
         $builder->setParameter('generate_ts.interface_output_directory', $interfaceOutputDirectory);
         $builder->setParameter('generate_ts.type_output_directory', $typeOutputDirectory);
-        $builder->setParameter('generate_ts.input_directory', $inputDirectory);
+        $builder->setParameter('generate_ts.enum_output_directory', $enumOutputDirectory);
+        $builder->setParameter('generate_ts.entity_input_directory', $entityInputDirectory);
+        $builder->setParameter('generate_ts.enum_input_directory', $enumInputDirectory);
     }
 }
