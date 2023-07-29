@@ -2,10 +2,21 @@
 
 # CodeBuds TypeScript Generator Bundle
 
-The CodeBuds TypeScript Generator Bundle is a Symfony bundle designed to improve developer experience (DX) by automatically generating TypeScript (TS) files based on PHP files. This bundle scans your PHP entities and creates corresponding TypeScript interfaces, significantly reducing the amount of time required to define these interfaces manually.
-Installation.
+The CodeBuds TypeScript Generator Bundle is a Symfony bundle designed to improve developer experience by
+automatically generating TypeScript files based on PHP files. This bundle scans your PHP entities and creates
+corresponding TypeScript interfaces and types. It can also scan the PHP Enums to generate the equivalent TypeScript Enums.
 
-It generates Typescript **Types**, **Interfaces** and **Enums**.
+## Table of Contents
+
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+    - [Types and Interfaces](#types-and-interfaces)
+    - [Enums](#enums)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Installation
 
 To install the bundle, use composer:
 
@@ -17,14 +28,19 @@ composer require codebuds/ts-generator-bundle --dev
 
 This bundle provides three configurable parameters with default values:
 
-- namespace: The PHP namespace for your entities. Default value is 'App\Entity\'.
-- interface_output_directory: The directory where the generated TypeScript interface files will be stored. Default value is '%kernel.project_dir%/assets/interfaces'.
-- type_output_directory: The directory where the generated TypeScript type files will be stored. Default value is '%kernel.project_dir%/assets/types'.
-- enum_output_directory: The directory where the generated TypeScript enum files will be stored. Default value is '%kernel.project_dir%/assets/enums'.
-- entity_input_directory: The directory containing the PHP files that will be used for TypeScript generation. Default value is '%kernel.project_dir%/src/Entity'.
-- enum_input_directory: The directory containing the PHP enums that will be used for TypeScript enum generation. Default value is '%kernel.project_dir%/src/Enum'.
+- **namespace**: The PHP namespace for your entities. Default value is 'App\Entity\'.
+- **interface_output_directory**: The directory where the generated TypeScript interface files will be stored. Default
+  value is '%kernel.project_dir%/assets/interfaces'.
+- **type_output_directory**: The directory where the generated TypeScript type files will be stored. Default value is '
+  %kernel.project_dir%/assets/types'.
+- **enum_output_directory**: The directory where the generated TypeScript enum files will be stored. Default value is '
+  %kernel.project_dir%/assets/enums'.
+- **entity_input_directory**: The directory containing the PHP files that will be used for TypeScript generation.
+  Default value is '%kernel.project_dir%/src/Entity'.
+- **enum_input_directory**: The directory containing the PHP enums that will be used for TypeScript enum generation.
+  Default value is '%kernel.project_dir%/src/Enum'.
 
-You can overwrite these default configurations by creating a YAML file named inside your config directory:
+You can overwrite these default configurations by creating a YAML file inside your config directory:
 
 ```yaml
 #config/generate_ts.yaml
@@ -90,17 +106,19 @@ Generate TypeScript Interfaces
 
 #### Options
 
-You can overwrite the configured values for the namespace, inputDirectory and outputDirectory when running the commande :
+You can overwrite the configured values for the namespace, inputDirectory and outputDirectory when running the
+commande :
 
 ```bash 
 codebuds:generate-ts:interfaces --namespace=App/Test/ --inputDirectory=vendor/codebuds/generate-ts-bundle/src/Tests/data --outputDirectory=vendor/codebuds/generate-ts-bundle/src/Tests/output --force
 ```
 
-## Output 
+## Output
 
-The script will try to match the types. If you have an entity that has relations it will map those to the TypeScript Interfaces.
+The script will try to match the types. If you have an entity that has relations it will map those to the TypeScript
+Interfaces.
 
-With an Entity like : 
+With an Entity like :
 
 ```php
 <?php
@@ -182,8 +200,8 @@ export type Root = {
   text: string;
 }
 ```
-### Enums
 
+### Enums
 
 To generate TypeScript enums, run the following command:
 
@@ -205,7 +223,7 @@ enum NotBacked
 }
 ```
 
-Turns into 
+Turns into
 
 ```ts
 export enum NotBacked {
@@ -228,11 +246,19 @@ enum BackedString: string
 }
 ```
 
-Turns into : 
+Turns into :
 
 ```ts
 export enum BackedString {
-	String = "String",
-	Another = "Something",
+  String = "String",
+  Another = "Something",
 }
 ```
+
+## Contributing
+
+If you want to contribute to this project, feel free to open issues and submit pull requests.
+
+## License
+
+This bundle is open-source software licensed under the [MIT license](https://opensource.org/license/mit/).
