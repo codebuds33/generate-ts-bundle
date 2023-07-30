@@ -80,11 +80,15 @@ class GenerateTsEnumsCommand extends Command
         $io->progressStart(count($files));
 
         foreach ($files as $file) {
-            $output = $this->fileGenerationService->generateTypescriptEnumFileContent(
-                file: $file,
-                inputDirectory: $this->inputDirectory,
-                namespace: $this->namespace
-            );
+            try {
+                $output = $this->fileGenerationService->generateTypescriptEnumFileContent(
+                    file: $file,
+                    inputDirectory: $this->inputDirectory,
+                    namespace: $this->namespace
+                );
+            } catch (\Exception $e) {
+                continue;
+            }
 
             $typeName = str_replace($this->inputDirectory, $this->outputDirectory, (string) $file);
             $typePath = str_replace('.php', '.ts', $typeName);

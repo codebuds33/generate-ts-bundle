@@ -2,6 +2,8 @@
 
 namespace CodeBuds\GenerateTsBundle\Service;
 
+use Exception;
+
 class FileGenerationService
 {
     public function __construct(private readonly FileInformationService $fileInformationService)
@@ -9,7 +11,7 @@ class FileGenerationService
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function generateTypescriptInterfaceFileContent(string $file, string $inputDirectory, string $namespace): string
     {
@@ -39,10 +41,12 @@ class FileGenerationService
         return $output;
     }
 
+    /**
+     * @throws Exception
+     */
     public function generateTypescriptEnumFileContent(string $file, string $inputDirectory, string $namespace): string
     {
         [
-            'imports' => $imports,
             'interface' => $interface,
             'properties' => $properties,
         ] = $this->fileInformationService->getEnumInformation(
@@ -50,8 +54,7 @@ class FileGenerationService
             inputDirectory: $inputDirectory,
             namespace: $namespace,
         );
-        $output = $this->initOutput($imports);
-        $output .= "export enum {$interface['shortName']} {\n";
+        $output = "export enum {$interface['shortName']} {\n";
 
         foreach ($properties as $property) {
             if (property_exists($property, 'value')) {
@@ -72,7 +75,7 @@ class FileGenerationService
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function getFileInformation(string $file, string $inputDirectory, string $namespace): array
     {

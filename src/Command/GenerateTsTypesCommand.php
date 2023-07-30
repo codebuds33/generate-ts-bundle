@@ -4,6 +4,7 @@ namespace CodeBuds\GenerateTsBundle\Command;
 
 use CodeBuds\GenerateTsBundle\Service\FileGenerationService;
 use CodeBuds\GenerateTsBundle\Service\FileInformationService;
+use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -80,11 +81,15 @@ class GenerateTsTypesCommand extends Command
         $io->progressStart(count($files));
 
         foreach ($files as $file) {
-            $output = $this->fileGenerationService->generateTypescriptTypeFileContent(
-                file: $file,
-                inputDirectory: $this->inputDirectory,
-                namespace: $this->namespace
-            );
+            try {
+                $output = $this->fileGenerationService->generateTypescriptTypeFileContent(
+                    file: $file,
+                    inputDirectory: $this->inputDirectory,
+                    namespace: $this->namespace
+                );
+            } catch (Exception $e) {
+                continue;
+            }
 
             $typeName = str_replace($this->inputDirectory, $this->outputDirectory, (string) $file);
             $typePath = str_replace('.php', '.ts', $typeName);

@@ -18,6 +18,11 @@
       "CodeBuds\\GenerateTsBundle\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "App\\Test\\": "src/Tests/data"
+    }
+  },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
     "rector/rector": "^0.15.21",
