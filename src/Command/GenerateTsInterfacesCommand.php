@@ -4,8 +4,6 @@ namespace CodeBuds\GenerateTsBundle\Command;
 
 use CodeBuds\GenerateTsBundle\Service\FileGenerationService;
 use CodeBuds\GenerateTsBundle\Service\FileInformationService;
-use ReflectionException;
-use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,11 +18,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class GenerateTsInterfacesCommand extends Command
 {
     use GenerateTsFilesCommandTrait;
+
     public function __construct(
-        private string                          $inputDirectory,
-        private string                          $outputDirectory,
-        private string                          $namespace,
-        private readonly FileGenerationService  $fileGenerationService,
+        private string $inputDirectory,
+        private string $outputDirectory,
+        private string $namespace,
+        private readonly FileGenerationService $fileGenerationService,
         private readonly FileInformationService $fileInformationService,
     ) {
         parent::__construct();
@@ -51,8 +50,9 @@ class GenerateTsInterfacesCommand extends Command
 
         try {
             $this->generateTsInterfaces($io, $force);
-        } catch (ReflectionException $e) {
+        } catch (\ReflectionException $e) {
             $io->error($e->getMessage());
+
             return Command::FAILURE;
         }
 
@@ -60,7 +60,7 @@ class GenerateTsInterfacesCommand extends Command
     }
 
     /**
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     private function generateTsInterfaces(SymfonyStyle $io, bool $force): void
     {
@@ -73,6 +73,7 @@ class GenerateTsInterfacesCommand extends Command
             $io->listing($fileNames);
 
             $io->info('use --force to generate the typescript interfaces');
+
             return;
         }
 
@@ -85,7 +86,7 @@ class GenerateTsInterfacesCommand extends Command
                 namespace: $this->namespace
             );
 
-            $typeName = str_replace($this->inputDirectory, $this->outputDirectory, (string)$file);
+            $typeName = str_replace($this->inputDirectory, $this->outputDirectory, (string) $file);
             $typePath = str_replace('.php', '.ts', $typeName);
 
             if (file_exists($typePath)) {
@@ -98,7 +99,7 @@ class GenerateTsInterfacesCommand extends Command
             }
 
             if (!is_dir(dirname($typePath)) && !mkdir($concurrentDirectory = dirname($typePath), 0777, true) && !is_dir($concurrentDirectory)) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
 
             file_put_contents($typePath, $output);

@@ -1,5 +1,4 @@
 services:
-
     CodeBuds\GenerateTsBundle\Service\FileInformationService:
         public: false
     codebuds.generate_ts.file_information_service:
@@ -32,7 +31,7 @@ services:
             $fileGenerationService: '@codebuds.generate_ts.file_generation_service'
             $fileInformationService: '@codebuds.generate_ts.file_information_service'
 
-    CodeBuds\GenerateTsBundle\Command\GenerateTsEnumCommand:
+    CodeBuds\GenerateTsBundle\Command\GenerateTsEnumsCommand:
         tags:
             - { name: console.command }
         arguments:
