@@ -26,17 +26,15 @@ class GenerateTsInterfacesCommand extends Command
         private string $namespace,
         private readonly FileGenerationService $fileGenerationService,
         private readonly FileInformationService $fileInformationService,
+        private bool $verbose = false,
+        private ?bool $debug = false,
     ) {
         parent::__construct();
     }
 
     protected function configure(): void
     {
-        $this
-            ->addOption('force', null, InputOption::VALUE_NONE, 'Create new TypeScript Interfaces')
-            ->addOption('namespace', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default namespace')
-            ->addOption('outputDirectory', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default output directory')
-            ->addOption('inputDirectory', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default input directory');
+        $this->addDefaultConfiguration();
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -46,6 +44,8 @@ class GenerateTsInterfacesCommand extends Command
         $io->title('Generate TypeScript Interfaces');
 
         $force = $input->getOption('force');
+        $this->verbose = $input->getOption('verbose');
+        $this->debug = $input->getOption('debug');
 
         $this->initArguments($input);
 
@@ -81,6 +81,11 @@ class GenerateTsInterfacesCommand extends Command
         $io->progressStart(count($files));
 
         foreach ($files as $file) {
+
+            if($this->debug) {
+                $io->info(sprintf("Working on file %s", $file));
+            }
+
             try {
                 $output = $this->fileGenerationService->generateTypescriptInterfaceFileContent(
                     file: $file,
@@ -88,6 +93,9 @@ class GenerateTsInterfacesCommand extends Command
                     namespace: $this->namespace
                 );
             } catch (Exception $e) {
+                if($this->debug) {
+                    $io->info(sprintf("Exception %s", $e->getMessage()));
+                }
                 continue;
             }
 
@@ -97,7 +105,9 @@ class GenerateTsInterfacesCommand extends Command
             if (file_exists($typePath)) {
                 $existingContent = file_get_contents($typePath);
                 if ($existingContent === $output) {
-                    $io->note(sprintf('No changes for %s', $typePath));
+                    if($this->verbose) {
+                        $io->note(sprintf('No changes for %s', $typePath));
+                    }
                     $io->progressAdvance();
                     continue;
                 }
@@ -108,7 +118,9 @@ class GenerateTsInterfacesCommand extends Command
             }
 
             file_put_contents($typePath, $output);
-            $io->info(sprintf('%s generated for %s', $typePath, $file));
+            if($this->verbose) {
+                $io->info(sprintf('%s generated for %s', $typePath, $file));
+            }
         }
         $io->progressFinish();
     }

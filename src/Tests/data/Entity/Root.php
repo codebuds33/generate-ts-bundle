@@ -38,4 +38,6 @@ class Root
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $text = null;
+
+    private ?AnInterface $anInterface = null;
 }

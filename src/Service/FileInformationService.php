@@ -55,6 +55,14 @@ class FileInformationService
             throw new \Exception('The class is abstract');
         }
 
+        if ($reflector->isTrait()) {
+            throw new \Exception('The class is a trait');
+        }
+
+        if ($reflector->isInterface()) {
+            throw new \Exception('The class is an interface');
+        }
+
         $properties = $reflector->getProperties();
 
         $data = [
