@@ -198,7 +198,7 @@ class FileInformationService
         ];
     }
 
-    private function checkIfTypeIsEntity(string $namespace, string $phpType): bool
+    private function checkIfTypeIsEntity(string $namespace, ?string $phpType): bool
     {
         $quotedNamespace = preg_quote(str_replace('/', '\\', $namespace), '/');
 
