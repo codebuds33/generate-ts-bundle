@@ -19,7 +19,7 @@ class GenerateTsBundle extends AbstractBundle
             ->scalarNode('type_output_directory')->defaultValue('%kernel.project_dir%/assets/types')->end()
             ->scalarNode('enum_output_directory')->defaultValue('%kernel.project_dir%/assets/enums')->end()
             ->scalarNode('entity_input_directory')->defaultValue('%kernel.project_dir%/src/Entity')->end()
-            ->scalarNode('enum_input_directory')->defaultValue('%kernel.project_dir%/src/Entity')->end()
+            ->scalarNode('enum_input_directory')->defaultValue('%kernel.project_dir%/src/Enum')->end()
             ->end();
     }
 
