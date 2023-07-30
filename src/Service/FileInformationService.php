@@ -8,7 +8,9 @@ use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\OneToOne;
+use Exception;
 use ReflectionClass;
+use ReflectionEnum;
 
 class FileInformationService
 {
@@ -31,6 +33,9 @@ class FileInformationService
         return array_map(static fn ($file) => $file, $files);
     }
 
+    /**
+     * @throws Exception
+     */
     public function getClassInformation(string $file, string $inputDirectory, string $namespace): ?array
     {
         $relativePath = ltrim(str_replace($inputDirectory, '', $file), '/');
@@ -38,13 +43,16 @@ class FileInformationService
         $className = str_replace('/', '\\', $className);
 
         // We need to require the file to make sure the ReflectionClass will be able to create the class
-        require_once $file;
+        if (!class_exists($className, false)) {
+            // The class is not already defined, so we require the file to load it.
+            require_once $file;
+        }
 
-        $reflector = new \ReflectionClass($className);
+        $reflector = new ReflectionClass($className);
         $shortName = $reflector->getShortName();
 
         if ($reflector->isAbstract()) {
-            return null;
+            throw new \Exception('The class is abstract');
         }
 
         $properties = $reflector->getProperties();
@@ -89,7 +97,7 @@ class FileInformationService
                 } elseif ($manyToManyAttributes) {
                     $reflexionAttribute = $manyToManyAttributes[0];
                 } else {
-                    throw new \Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
+                    throw new Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
                 }
                 $target = $reflexionAttribute->getArguments()['targetEntity'];
             }
@@ -156,36 +164,38 @@ class FileInformationService
         return $data;
     }
 
-    public function getEnumInformation(string $file, string $inputDirectory, string $namespace): ?array
+    /**
+     * @throws Exception
+     */
+    public function getEnumInformation(string $file, string $inputDirectory, string $namespace): array
     {
         $relativePath = ltrim(str_replace($inputDirectory, '', $file), '/');
         $enumName = $namespace.str_replace(['.php', '/'], ['', '\\'], $relativePath);
         $enumName = str_replace('/', '\\', $enumName);
 
+        if(!enum_exists($enumName)) {
+            throw new Exception("Not a valid enum");
+        }
+
         // We need to require the file to make sure the ReflectionClass will be able to create the enum
         require_once $file;
 
-        $reflector = new \ReflectionEnum($enumName);
+        $reflector = new ReflectionEnum($enumName);
         $shortName = $reflector->getShortName();
 
         if ($reflector->isAbstract()) {
-            return null;
+            throw new Exception("Not a valid enum");
         }
 
         $properties = $reflector->getConstants();
 
-        $data = [
+        return [
             'interface' => [
                 'shortName' => $shortName,
                 'className' => $enumName,
             ],
-            'properties' => $properties,
-            'imports' => [],
+            'properties' => $properties
         ];
-
-        $imports = [];
-
-        return $data;
     }
 
     private function checkIfTypeIsEntity(string $namespace, string $phpType): bool

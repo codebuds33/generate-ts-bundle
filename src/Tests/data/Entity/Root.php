@@ -14,6 +14,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: RootRepository::class)]
 class Root
 {
+    use ATrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
