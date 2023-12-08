@@ -67,7 +67,7 @@ class GenerateTsTest extends KernelTestCase
 
         // Test with force
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true]);
+        $commandTester->execute(['--force' => true, '--verbose' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('Root.ts generated', $this->trimOutput($output));
 
@@ -81,7 +81,7 @@ class GenerateTsTest extends KernelTestCase
         }
 
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true]);
+        $commandTester->execute(['--force' => true, '--verbose' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
     }
@@ -124,7 +124,8 @@ class GenerateTsTest extends KernelTestCase
 
         // Test with force
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true]);
+        $commandTester->execute(['--force' => true, '--verbose' => true]);
+
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('Root.ts generated', $this->trimOutput($output));
 
@@ -139,7 +140,7 @@ class GenerateTsTest extends KernelTestCase
 
         // Run it again to see there are no changes
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true]);
+        $commandTester->execute(['--force' => true, '--verbose' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
     }
@@ -182,7 +183,7 @@ class GenerateTsTest extends KernelTestCase
 
         // Test with force
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true]);
+        $commandTester->execute(['--force' => true, '--verbose' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('BackedString.ts generated', $this->trimOutput($output));
 
@@ -197,7 +198,7 @@ class GenerateTsTest extends KernelTestCase
 
         // Run it again to see there are no changes
         $commandTester = new CommandTester($command);
-        $commandTester->execute(['--force' => true]);
+        $commandTester->execute(['--force' => true, '--verbose' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
     }

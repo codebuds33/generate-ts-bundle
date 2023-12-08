@@ -255,6 +255,10 @@ export enum BackedString {
 }
 ```
 
+## TODO 
+
+- union types
+
 ## Contributing
 
 If you want to contribute to this project, feel free to open issues and submit pull requests.
