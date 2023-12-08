@@ -37,5 +37,4 @@ trait GenerateTsFilesCommandTrait
             ->addOption('debug', 'd', InputOption::VALUE_OPTIONAL, 'Show information about the files being processed')
         ;
     }
-
 }

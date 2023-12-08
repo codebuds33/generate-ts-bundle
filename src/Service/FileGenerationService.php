@@ -2,8 +2,6 @@
 
 namespace CodeBuds\GenerateTsBundle\Service;
 
-use Exception;
-
 class FileGenerationService
 {
     public function __construct(private readonly FileInformationService $fileInformationService)
@@ -11,7 +9,7 @@ class FileGenerationService
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function generateTypescriptInterfaceFileContent(string $file, string $inputDirectory, string $namespace): string
     {
@@ -42,7 +40,7 @@ class FileGenerationService
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function generateTypescriptEnumFileContent(string $file, string $inputDirectory, string $namespace): string
     {
@@ -75,7 +73,7 @@ class FileGenerationService
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     private function getFileInformation(string $file, string $inputDirectory, string $namespace): array
     {

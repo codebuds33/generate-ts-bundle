@@ -8,9 +8,7 @@ use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\OneToOne;
-use Exception;
 use ReflectionClass;
-use ReflectionEnum;
 
 class FileInformationService
 {
@@ -34,7 +32,7 @@ class FileInformationService
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function getClassInformation(string $file, string $inputDirectory, string $namespace): ?array
     {
@@ -48,7 +46,7 @@ class FileInformationService
             require_once $file;
         }
 
-        $reflector = new ReflectionClass($className);
+        $reflector = new \ReflectionClass($className);
         $shortName = $reflector->getShortName();
 
         if ($reflector->isAbstract()) {
@@ -105,7 +103,7 @@ class FileInformationService
                 } elseif ($manyToManyAttributes) {
                     $reflexionAttribute = $manyToManyAttributes[0];
                 } else {
-                    throw new Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
+                    throw new \Exception(printf('No target found for the %s Collection on %s', $propertyName, $className));
                 }
                 $target = $reflexionAttribute->getArguments()['targetEntity'];
             }
@@ -173,7 +171,7 @@ class FileInformationService
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function getEnumInformation(string $file, string $inputDirectory, string $namespace): array
     {
@@ -181,18 +179,18 @@ class FileInformationService
         $enumName = $namespace.str_replace(['.php', '/'], ['', '\\'], $relativePath);
         $enumName = str_replace('/', '\\', $enumName);
 
-        if(!enum_exists($enumName)) {
-            throw new Exception("Not a valid enum");
+        if (!enum_exists($enumName)) {
+            throw new \Exception('Not a valid enum');
         }
 
         // We need to require the file to make sure the ReflectionClass will be able to create the enum
         require_once $file;
 
-        $reflector = new ReflectionEnum($enumName);
+        $reflector = new \ReflectionEnum($enumName);
         $shortName = $reflector->getShortName();
 
         if ($reflector->isAbstract()) {
-            throw new Exception("Not a valid enum");
+            throw new \Exception('Not a valid enum');
         }
 
         $properties = $reflector->getConstants();
@@ -202,7 +200,7 @@ class FileInformationService
                 'shortName' => $shortName,
                 'className' => $enumName,
             ],
-            'properties' => $properties
+            'properties' => $properties,
         ];
     }
 

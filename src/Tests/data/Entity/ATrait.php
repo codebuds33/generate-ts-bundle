@@ -6,6 +6,6 @@ trait ATrait
 {
     public function sayHello(): string
     {
-        return  "hello";
+        return 'hello';
     }
 }

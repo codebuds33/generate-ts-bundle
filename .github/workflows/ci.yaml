@@ -10,9 +10,9 @@ jobs:
         strategy:
             matrix:
                 operating-system: [ ubuntu-latest ]
-                php-versions: [ '8.1', '8.2' ]
-                php-unit-versions: [ '9.5', '10.2' ]
-                symfony-versions: [ '6.1', '6.2', '6.3' ]
+                php-versions: [ '8.1' ]
+                php-unit-versions: [ '9.5', '10.4' ]
+                symfony-versions: [ '6.1', '6.4' ]
         name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} - PHPUnit ${{ matrix.php-unit-versions }}
         steps:
             -   uses: actions/checkout@v3

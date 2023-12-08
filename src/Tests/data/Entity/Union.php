@@ -4,5 +4,5 @@ namespace App\Test\Entity;
 
 class Union
 {
-    private array|string $union;
+    private readonly array|string $union;
 }

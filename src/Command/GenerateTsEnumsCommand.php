@@ -4,11 +4,9 @@ namespace CodeBuds\GenerateTsBundle\Command;
 
 use CodeBuds\GenerateTsBundle\Service\FileGenerationService;
 use CodeBuds\GenerateTsBundle\Service\FileInformationService;
-use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -81,10 +79,8 @@ class GenerateTsEnumsCommand extends Command
         $io->progressStart(count($files));
 
         foreach ($files as $file) {
-
-
-            if($this->debug) {
-                $io->info(sprintf("Working on file %s", $file));
+            if ($this->debug) {
+                $io->info(sprintf('Working on file %s', $file));
             }
 
             try {
@@ -93,9 +89,9 @@ class GenerateTsEnumsCommand extends Command
                     inputDirectory: $this->inputDirectory,
                     namespace: $this->namespace
                 );
-            } catch (Exception $e) {
-                if($this->debug) {
-                    $io->info(sprintf("Exception %s", $e->getMessage()));
+            } catch (\Exception $e) {
+                if ($this->debug) {
+                    $io->info(sprintf('Exception %s', $e->getMessage()));
                 }
                 continue;
             }
@@ -106,7 +102,7 @@ class GenerateTsEnumsCommand extends Command
             if (file_exists($typePath)) {
                 $existingContent = file_get_contents($typePath);
                 if ($existingContent === $output) {
-                    if($this->verbose) {
+                    if ($this->verbose) {
                         $io->note(sprintf('No changes for %s', $typePath));
                     }
                     $io->progressAdvance();
@@ -119,7 +115,7 @@ class GenerateTsEnumsCommand extends Command
             }
 
             file_put_contents($typePath, $output);
-            if($this->verbose){
+            if ($this->verbose) {
                 $io->info(sprintf('%s generated for %s', $typePath, $file));
             }
         }
