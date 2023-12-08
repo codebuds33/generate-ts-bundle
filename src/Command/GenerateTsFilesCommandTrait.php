@@ -34,7 +34,6 @@ trait GenerateTsFilesCommandTrait
             ->addOption('namespace', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default namespace')
             ->addOption('outputDirectory', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default output directory')
             ->addOption('inputDirectory', null, InputOption::VALUE_OPTIONAL, 'Overwrite the default input directory')
-            ->addOption('debug', 'd', InputOption::VALUE_OPTIONAL, 'Show information about the files being processed')
-        ;
+            ->addOption('debug', 'd', InputOption::VALUE_OPTIONAL, 'Show information about the files being processed');
     }
 }

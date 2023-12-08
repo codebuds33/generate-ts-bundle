@@ -23,8 +23,8 @@ jobs:
                     path: /tmp/composer-cache
                     key: ${{ runner.os }}-${{ matrix.symfony-versions }}-${{ hashFiles('**/composer.lock') }}
 
-            - name: Install Symfony
-              run: composer require symfony/framework-bundle:${{ matrix.symfony-versions }}
+            -   name: Install Symfony
+                run: composer require symfony/framework-bundle:${{ matrix.symfony-versions }}
 
             -   name: composer
                 uses: php-actions/composer@v6

@@ -25,6 +25,50 @@ class FileGenerationService
         return $output;
     }
 
+    /**
+     * @throws \Exception
+     */
+    private function getFileInformation(string $file, string $inputDirectory, string $namespace): array
+    {
+        $information = $this->fileInformationService->getClassInformation(
+            file: $file,
+            inputDirectory: $inputDirectory,
+            namespace: $namespace,
+        );
+        $typeScriptProperties = [];
+        foreach ($information['properties'] as $property) {
+            $tsType = $this->fileInformationService->mapPhpTypeToTsType(
+                namespace: $namespace,
+                phpType: $property['type'],
+                target: $property['target'],
+            );
+            $typeScriptProperties[] = "  {$property['name']}: {$tsType};";
+        }
+
+        $interfaceName = $information['interface']['shortName'];
+
+        return [
+            'imports' => $information['imports'],
+            'name' => $interfaceName,
+            'properties' => $typeScriptProperties,
+        ];
+    }
+
+    private function initOutput(array $imports): string
+    {
+        $output = '';
+
+        foreach ($imports as $target) {
+            $output .= sprintf("import {%s} from \"%s\"\n", $target['name'], $target['path']);
+        }
+
+        if ($output !== '') {
+            $output .= "\n";
+        }
+
+        return $output;
+    }
+
     public function generateTypescriptTypeFileContent(string $file, string $inputDirectory, string $namespace): string
     {
         [
@@ -68,50 +112,6 @@ class FileGenerationService
         }
 
         $output .= "}\n";
-
-        return $output;
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function getFileInformation(string $file, string $inputDirectory, string $namespace): array
-    {
-        $information = $this->fileInformationService->getClassInformation(
-            file: $file,
-            inputDirectory: $inputDirectory,
-            namespace: $namespace,
-        );
-        $typeScriptProperties = [];
-        foreach ($information['properties'] as $property) {
-            $tsType = $this->fileInformationService->mapPhpTypeToTsType(
-                namespace: $namespace,
-                phpType: $property['type'],
-                target: $property['target'],
-            );
-            $typeScriptProperties[] = "  {$property['name']}: {$tsType};";
-        }
-
-        $interfaceName = $information['interface']['shortName'];
-
-        return [
-            'imports' => $information['imports'],
-            'name' => $interfaceName,
-            'properties' => $typeScriptProperties,
-        ];
-    }
-
-    private function initOutput(array $imports): string
-    {
-        $output = '';
-
-        foreach ($imports as $target) {
-            $output .= sprintf("import {%s} from \"%s\"\n", $target['name'], $target['path']);
-        }
-
-        if ($output !== '') {
-            $output .= "\n";
-        }
 
         return $output;
     }

@@ -1,4 +1,4 @@
 export enum BackedInt {
-	One = 1,
-	Two = 2,
+  One = 1,
+  Two = 2,
 }

@@ -1,4 +1,4 @@
 export enum BackedString {
-	String = "String",
-	Another = "Something",
+  String = "String",
+  Another = "Something",
 }

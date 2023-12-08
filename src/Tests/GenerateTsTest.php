@@ -86,6 +86,26 @@ class GenerateTsTest extends KernelTestCase
         $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
     }
 
+    private static function getFilePaths(string $subDir, array $files = self::ENTITY_INPUT_FILES): array
+    {
+        $filePaths = [];
+        foreach ($files as $file) {
+            $filePaths[$file] = [
+                'generatedPath' => sprintf('/output/%s/%s.ts', $subDir, $file),
+                'expectedPath' => sprintf('/expected/%s/%s.ts', $subDir, $file),
+            ];
+        }
+
+        return $filePaths;
+    }
+
+    private function trimOutput(string $output): string
+    {
+        $cleanedString = preg_replace('/\s+/', ' ', $output);
+
+        return str_replace(["\n", "\r", "\t"], '', $cleanedString);
+    }
+
     public function testGenerateTypes(): void
     {
         $filePaths = self::getFilePaths('types');
@@ -201,25 +221,5 @@ class GenerateTsTest extends KernelTestCase
         $commandTester->execute(['--force' => true, '--verbose' => true]);
         $output = $commandTester->getDisplay();
         $this->assertStringContainsString('[NOTE] No changes', $this->trimOutput($output));
-    }
-
-    private static function getFilePaths(string $subDir, array $files = self::ENTITY_INPUT_FILES): array
-    {
-        $filePaths = [];
-        foreach ($files as $file) {
-            $filePaths[$file] = [
-                'generatedPath' => sprintf('/output/%s/%s.ts', $subDir, $file),
-                'expectedPath' => sprintf('/expected/%s/%s.ts', $subDir, $file),
-            ];
-        }
-
-        return $filePaths;
-    }
-
-    private function trimOutput(string $output): string
-    {
-        $cleanedString = preg_replace('/\s+/', ' ', $output);
-
-        return str_replace(["\n", "\r", "\t"], '', $cleanedString);
     }
 }

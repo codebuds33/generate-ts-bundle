@@ -43,6 +43,9 @@ class FileInformationService
         // We need to require the file to make sure the ReflectionClass will be able to create the class
         if (!class_exists($className, false)) {
             // The class is not already defined, so we require the file to load it.
+            if (!file_exists($file)) {
+                throw new \Exception('The file does not exist');
+            }
             require_once $file;
         }
 
@@ -170,40 +173,6 @@ class FileInformationService
         return $data;
     }
 
-    /**
-     * @throws \Exception
-     */
-    public function getEnumInformation(string $file, string $inputDirectory, string $namespace): array
-    {
-        $relativePath = ltrim(str_replace($inputDirectory, '', $file), '/');
-        $enumName = $namespace.str_replace(['.php', '/'], ['', '\\'], $relativePath);
-        $enumName = str_replace('/', '\\', $enumName);
-
-        if (!enum_exists($enumName)) {
-            throw new \Exception('Not a valid enum');
-        }
-
-        // We need to require the file to make sure the ReflectionClass will be able to create the enum
-        require_once $file;
-
-        $reflector = new \ReflectionEnum($enumName);
-        $shortName = $reflector->getShortName();
-
-        if ($reflector->isAbstract()) {
-            throw new \Exception('Not a valid enum');
-        }
-
-        $properties = $reflector->getConstants();
-
-        return [
-            'interface' => [
-                'shortName' => $shortName,
-                'className' => $enumName,
-            ],
-            'properties' => $properties,
-        ];
-    }
-
     private function checkIfTypeIsEntity(string $namespace, ?string $phpType): bool
     {
         $quotedNamespace = preg_quote(str_replace('/', '\\', $namespace), '/');
@@ -274,6 +243,40 @@ class FileInformationService
         $relativePath .= $targetSubPath;
 
         return $relativePath;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function getEnumInformation(string $file, string $inputDirectory, string $namespace): array
+    {
+        $relativePath = ltrim(str_replace($inputDirectory, '', $file), '/');
+        $enumName = $namespace.str_replace(['.php', '/'], ['', '\\'], $relativePath);
+        $enumName = str_replace('/', '\\', $enumName);
+
+        if (!enum_exists($enumName)) {
+            throw new \Exception('Not a valid enum');
+        }
+
+        // We need to require the file to make sure the ReflectionClass will be able to create the enum
+        require_once $file;
+
+        $reflector = new \ReflectionEnum($enumName);
+        $shortName = $reflector->getShortName();
+
+        if ($reflector->isAbstract()) {
+            throw new \Exception('Not a valid enum');
+        }
+
+        $properties = $reflector->getConstants();
+
+        return [
+            'interface' => [
+                'shortName' => $shortName,
+                'className' => $enumName,
+            ],
+            'properties' => $properties,
+        ];
     }
 
     public function mapPhpTypeToTsType(string $namespace, ?string $phpType, ?string $target = null): string

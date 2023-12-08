@@ -4,7 +4,8 @@
 
 The CodeBuds TypeScript Generator Bundle is a Symfony bundle designed to improve developer experience by
 automatically generating TypeScript files based on PHP files. This bundle scans your PHP entities and creates
-corresponding TypeScript interfaces and types. It can also scan the PHP Enums to generate the equivalent TypeScript Enums.
+corresponding TypeScript interfaces and types. It can also scan the PHP Enums to generate the equivalent TypeScript
+Enums.
 
 ## Table of Contents
 
@@ -255,7 +256,7 @@ export enum BackedString {
 }
 ```
 
-## TODO 
+## TODO
 
 - union types
 
